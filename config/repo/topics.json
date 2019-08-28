@@ -1,0 +1,57 @@
+[
+  {
+    "name": "test",
+    "partitioncount": 9,
+    "replicationfactor": 3,
+    "clusters": [
+      "dev",
+      "test"
+    ],
+    "configs": {
+        "cleanup.policy": "compact"
+      },
+    "acls": [
+      {
+        "principal": ["User:sliebau"],
+        "host": ["*"],
+        "operation": [
+          "CREATE",
+          "DESCRIBE",
+          "WRITE"
+        ],
+        "permissionType": "ALLOW",
+        "group": [
+          "group1",
+          "group2"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "test2",
+    "partitioncount": 9,
+    "replicationfactor": 3,
+    "clusters": [
+      "dev",
+      "test"
+    ],
+    "configs": {
+        "cleanup.policy": "compact"
+      },
+    "acls": [
+      {
+        "principal": ["User:sliebau"],
+        "host": ["*"],
+        "operation": [
+          "READ",
+          "WRITE"
+        ],
+        "permissionType": "ALLOW",
+        "group": [
+          "group1",
+          "group2"
+        ]
+      }
+    ]
+  }
+]
