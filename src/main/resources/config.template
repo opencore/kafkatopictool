@@ -1,0 +1,13 @@
+cluster.aws.bootstrap.servers=worker-1.opencore.com:9092
+cluster.aws.zookeeper.connect=worker-1.opencore.com:2181
+cluster.aws.ignore.topics=_.*|connect.*
+
+repository.local.provider=com.opencore.kafka.topictool.repository.parser.JsonRepositoryParser
+repository.local.path=/home/sliebau/coden/jsontopiclister/src/main/resources/repo
+repository.local.recurse=false
+repository.local.filter=*.json
+
+repository.kafka.provider=com.opencore.kafka.topictool.repository.provider.KafkaRepositoryProvider
+repository.kafka.bootstrap.servers=worker-4.opencore.com:9092
+repository.kafka.copytocluster=aws
+repository.kafka.topicfilter=copy.*|test.*
