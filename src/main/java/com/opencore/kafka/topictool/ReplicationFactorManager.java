@@ -2,6 +2,7 @@ package com.opencore.kafka.topictool;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.opencore.kafka.ScalaInterface;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.opencore.kafka.topictool
+package com.opencore.kafka
 
 import kafka.admin.ReassignPartitionsCommand
 import kafka.zk.KafkaZkClient
