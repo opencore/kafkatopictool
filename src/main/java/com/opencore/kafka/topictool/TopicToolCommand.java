@@ -7,7 +7,6 @@ import com.opencore.kafka.topictool.repository.provider.KafkaRepositoryProvider;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ public class TopicToolCommand {
           TopicManager clusterManager = topicManagerMap.get(clusterName);
           List<TopicDefinition> topicsToExport = clusterManager.getTopics()
               .stream()
-              .map(e -> new TopicDefinition(e, Collections.singletonList(clusterName)))
+              .map(e -> new TopicDefinition(e, null))
               .collect(Collectors.toList());
 
           try (Writer writer = new FileWriter(clusterName + ".json")) {

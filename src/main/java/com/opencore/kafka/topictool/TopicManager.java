@@ -103,10 +103,17 @@ public class TopicManager implements AutoCloseable {
       Map<String, String> configEntries = null;
       try {
         Collection<Node> nodeList = adminClient.describeCluster().nodes().get();
-        List<String> list = nodeList.stream().map(e -> e.idString()).collect(Collectors.toList());
+        List<String> list = nodeList
+            .stream()
+            .map(e -> e.idString())
+            .collect(Collectors.toList());
+
         ConfigResource firstBroker = new ConfigResource(ConfigResource.Type.BROKER, list.get(0));
         Map<ConfigResource, Config> configResourceConfigMap1 = adminClient.describeConfigs(Collections.singletonList(firstBroker)).all().get();
-        configEntries = configResourceConfigMap1.get(firstBroker).entries().stream().filter(e -> e.value() != null).collect(Collectors.toMap(e -> e.name(), e -> e.value()));
+        configEntries = configResourceConfigMap1.get(firstBroker).entries()
+            .stream()
+            .filter(e -> e.value() != null)
+            .collect(Collectors.toMap(e -> e.name(), e -> e.value()));
 
         System.out.println();
       } catch (Exception e) {
@@ -117,8 +124,11 @@ public class TopicManager implements AutoCloseable {
       for (NewTopic topic : newTopicList) {
         // Retrieve configuration for this topic and filter out any that are set to the default value
         Config topicConfig = configAsStringMap.get(topic.name());
-        List<ConfigEntry> collect = topicConfig.entries().stream().filter(e -> finalConfigEntries.containsKey("log." + e.name())).collect(Collectors.toList());
-        Map<String, String> collect1 = collect.stream().collect(Collectors.toMap(e -> e.name(), e -> e.value()));
+        List<ConfigEntry> collect = topicConfig.entries()
+            .stream()
+            .filter(e -> finalConfigEntries.containsKey("log." + e.name()))
+            .collect(Collectors.toList());
+
 
         Map<String, String> filteredConfigs = topicConfig.entries().stream()
             .filter(entry -> !(entry.isDefault() && false))
