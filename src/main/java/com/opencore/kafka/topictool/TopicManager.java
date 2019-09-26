@@ -12,6 +12,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import kafka.security.auth.Topic;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
@@ -57,6 +58,21 @@ public class TopicManager implements AutoCloseable {
   public List<NewTopic> getTopics() {
     return getTopics(".*", true);
   }
+
+  public TopicDescription getPartitionsForTopic(String topic) {
+    Map<String, TopicDescription> topicPartitions = null;
+    try {
+      topicPartitions = adminClient.describeTopics(Collections.singletonList(topic)).all().get();
+    } catch (InterruptedException | ExecutionException e) {
+      e.printStackTrace();
+    }
+    return topicPartitions.get(topic);
+
+
+
+  }
+
+
 
   public List<NewTopic> getTopics(Boolean onlyNonDefaults) {
     return getTopics(".*", onlyNonDefaults);

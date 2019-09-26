@@ -7,10 +7,13 @@ import com.opencore.kafka.topictool.repository.provider.KafkaRepositoryProvider;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.NewTopic;
 
@@ -25,7 +28,7 @@ public class TopicToolCommand {
 
 
     Map<String, Properties> repoProperties = config.getRepoProperties();
-    KafkaRepositoryProvider repo = new KafkaRepositoryProvider(repoProperties.get("kafka"));
+    KafkaRepositoryProvider repo = null;//new KafkaRepositoryProvider(repoProperties.get("kafka"));
 
     if (config.getConfig("command") == "export") {
       List<String> cluster = config.getList("cluster");
@@ -65,6 +68,28 @@ public class TopicToolCommand {
       }
 
       //topicManager.sync(repo.getTopics());
+    } else if (config.getConfig("command") == "compare") {
+      List<String> topics = config.getList("topics");
+      TopicComparer comparer = new TopicComparer(config.getClusterConfigs());
+
+      List<String> clusterList = new ArrayList<>();
+      clusterList.addAll(config.getClusterConfigs().keySet());
+      List<Future<PartitionCompareResult>> results = comparer.compare(topics, clusterList);
+
+      comparer.close();
+      for (Future<PartitionCompareResult> result : results) {
+        try {
+          PartitionCompareResult partitionCompareResult = result.get();
+          System.out.println(partitionCompareResult.result);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (ExecutionException e) {
+          e.printStackTrace();
+        }
+      }
+
+
+
     }
 
 

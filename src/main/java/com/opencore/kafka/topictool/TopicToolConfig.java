@@ -47,6 +47,28 @@ public class TopicToolConfig {
 
     Subparsers subparsers = argumentParser.addSubparsers().help("list topics in a variety of formats.");
 
+    Subparser compareParser = subparsers.addParser("compare").setDefault("command", "compare");
+    compareParser.addArgument("-f", "--config-file")
+        .dest("configfile")
+        .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
+        .help("Path and name of file to load Kafka configuration from.");
+    compareParser.addArgument("-c", "--cluster")
+        .dest("cluster")
+        .action(new AppendArgumentAction())
+        .help("Cluster from config file that should be queried.");
+    compareParser.addArgument("-t", "--topics")
+        .dest("topics")
+        .action(new AppendArgumentAction())
+        .help("Specific topics to compare.");
+    compareParser.addArgument("-p", "--topic-pattern")
+        .dest("topicpattern")
+        .action(new AppendArgumentAction())
+        .help("Pattern to match against topicnames.");
+    compareParser.addArgument("-threads")
+        .dest("threadcount")
+        .type(Integer.class)
+        .help("Number of threads to start for comparison operations.");
+
     Subparser exportParser = subparsers.addParser("export").setDefault("command", "export");
     exportParser.addArgument("-f", "--config-file")
         .dest("configfile")
