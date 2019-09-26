@@ -18,7 +18,7 @@ public class KafkaRepositoryProvider implements RepositoryProviderService {
 
   public KafkaRepositoryProvider(Properties repoProperties) {
     this.repoProperties = repoProperties;
-    this.topicManager = new TopicManager(repoProperties);
+    this.topicManager = new TopicManager("kafkarepo", repoProperties);
     this.filterRegex = repoProperties.getProperty("topicfilter");
     String clustersString = repoProperties.getProperty("copytocluster");
     this.targetClusters = Arrays.asList(clustersString.split(","));

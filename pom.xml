@@ -15,9 +15,33 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <deployment.repository.id>ossrh</deployment.repository.id>
+    <deployment.repository.snapshot-id>${deployment.repository.id}</deployment.repository.snapshot-id>
+    <deployment.repository.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</deployment.repository.url>
+    <deployment.repository.snapshot-url>https://oss.sonatype.org/content/repositories/snapshots</deployment.repository.snapshot-url>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>1.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.26</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.3</version>
+    </dependency>
     <dependency>
       <groupId>net.sourceforge.argparse4j</groupId>
       <artifactId>argparse4j</artifactId>
@@ -48,6 +72,11 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>2.11.12</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
     </dependency>
 
   </dependencies>
@@ -156,4 +185,14 @@
       </plugins>
     </pluginManagement>
   </build>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>${deployment.repository.snapshot-id}</id>
+      <url>${deployment.repository.snapshot-url}</url>
+    </snapshotRepository>
+    <repository>
+      <id>${deployment.repository.id}</id>
+      <url>${deployment.repository.url}</url>
+    </repository>
+  </distributionManagement>
 </project>
