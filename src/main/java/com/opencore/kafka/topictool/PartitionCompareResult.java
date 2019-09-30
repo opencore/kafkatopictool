@@ -1,6 +1,25 @@
 package com.opencore.kafka.topictool;
 
 public class PartitionCompareResult {
+  String topic;
+  int partition;
+
+  public String getTopic() {
+    return topic;
+  }
+
+  public void setTopic(String topic) {
+    this.topic = topic;
+  }
+
+  public int getPartition() {
+    return partition;
+  }
+
+  public void setPartition(int partition) {
+    this.partition = partition;
+  }
+
   boolean result = true;
   Long failedOffset1 = -1L;
   Long failedOffset2 = -1L;

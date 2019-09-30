@@ -33,8 +33,8 @@ public class TopicToolConfig {
     initialize(commandLineArgs);
   }
 
-  public String getConfig(String configName) {
-    return parsedCommandLineArgs.get(configName);
+  public Namespace getConfig() {
+    return parsedCommandLineArgs;
   }
 
   public List<String> getList(String listName) {
@@ -56,18 +56,19 @@ public class TopicToolConfig {
         .dest("cluster")
         .action(new AppendArgumentAction())
         .help("Cluster from config file that should be queried.");
-    compareParser.addArgument("-t", "--topics")
+    compareParser.addArgument("-p", "--topic-pattern")
         .dest("topics")
         .action(new AppendArgumentAction())
-        .help("Specific topics to compare.");
-    compareParser.addArgument("-p", "--topic-pattern")
-        .dest("topicpattern")
-        .action(new AppendArgumentAction())
-        .help("Pattern to match against topicnames.");
-    compareParser.addArgument("-threads")
+        .help("Topics to compare, takes regexes: for example test.* or test.*|xxx.*");
+    compareParser.addArgument("-t", "-threads")
         .dest("threadcount")
         .type(Integer.class)
+        .setDefault(5)
         .help("Number of threads to start for comparison operations.");
+    compareParser.addArgument("-m", "--mismatch-only")
+        .dest("mismatchonly")
+        .action(Arguments.storeTrue())
+        .help("Print only topics that don't match.");
 
     Subparser exportParser = subparsers.addParser("export").setDefault("command", "export");
     exportParser.addArgument("-f", "--config-file")

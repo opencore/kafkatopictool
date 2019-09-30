@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.NewTopic;
 
@@ -30,7 +28,7 @@ public class TopicToolCommand {
     Map<String, Properties> repoProperties = config.getRepoProperties();
     KafkaRepositoryProvider repo = null;//new KafkaRepositoryProvider(repoProperties.get("kafka"));
 
-    if (config.getConfig("command") == "export") {
+    if (config.getConfig().getString("command") == "export") {
       List<String> cluster = config.getList("cluster");
       if (cluster == null) {
         System.out.println("Exporting topics from all clusters!");
@@ -58,7 +56,7 @@ public class TopicToolCommand {
       }
 
       System.exit(0);
-    } else if (config.getConfig("command") == "sync") {
+    } else if (config.getConfig().getString("command") == "sync") {
       for (String clusterName : topicManagerMap.keySet()) {
         TopicManager topicManager = topicManagerMap.get(clusterName);
 
@@ -68,32 +66,28 @@ public class TopicToolCommand {
       }
 
       //topicManager.sync(repo.getTopics());
-    } else if (config.getConfig("command") == "compare") {
+    } else if (config.getConfig().getString("command") == "compare") {
+      boolean printMismatchOnly = config.getConfig().getBoolean("mismatchonly");
       List<String> topics = config.getList("topics");
-      TopicComparer comparer = new TopicComparer(config.getClusterConfigs());
+      TopicComparer comparer = new TopicComparer(config.getClusterConfigs(), config.getConfig().getInt("threadcount"));
 
       List<String> clusterList = new ArrayList<>();
       clusterList.addAll(config.getClusterConfigs().keySet());
-      List<Future<PartitionCompareResult>> results = comparer.compare(topics, clusterList);
+      TopicCompareResult result = comparer.compare(topics, clusterList);
 
-      comparer.close();
-      for (Future<PartitionCompareResult> result : results) {
-        try {
-          PartitionCompareResult partitionCompareResult = result.get();
-          System.out.println(partitionCompareResult.result);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (ExecutionException e) {
-          e.printStackTrace();
+      Map<String, List<PartitionCompareResult>> resultMap = result.all();
+      System.out.println("Compared " + resultMap.size() + " topics..");
+      for (String topic : resultMap.keySet().stream().sorted().collect(Collectors.toList())) {
+        boolean match = true;
+        for (PartitionCompareResult partitionResult : resultMap.get(topic)) {
+          match = match && partitionResult.getResult();
         }
+        if (!printMismatchOnly || (!match && printMismatchOnly)) {
+          System.out.println(topic + ": " + (match ? "MATCH" : "MISMATCH"));
+        }
+
       }
-
-
-
+      comparer.close();
     }
-
-
-
-    System.out.println();
   }
 }

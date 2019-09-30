@@ -28,12 +28,13 @@ public class TopicComparer {
   Map<String, KafkaConsumer<Byte[], Byte[]>> consumerMap;
   Map<String, TopicManager> managerMap;
   Map<String, AdminClient> adminClientMap;
-  ExecutorService executor = Executors.newFixedThreadPool(5);
+  ExecutorService executor = null;
 
-  public TopicComparer(Map<String, Properties> clusterPropertiesMap) {
+  public TopicComparer(Map<String, Properties> clusterPropertiesMap, int threadCount) {
     this.clusterPropertiesMap = clusterPropertiesMap;
     this.managerMap = new HashMap<>();
     this.adminClientMap = new HashMap<>();
+    this.executor = Executors.newFixedThreadPool(threadCount);
 
 
     for (String clusterName : clusterPropertiesMap.keySet()) {
@@ -56,7 +57,7 @@ public class TopicComparer {
   }
 
 
-  public List<Future<PartitionCompareResult>> compare(List<String> patterns, List<String> clusters) {
+  public TopicCompareResult compare(List<String> patterns, List<String> clusters) {
     if (clusters.size() != 2) {
       throw new IllegalArgumentException("Currently comparing topics is only supported across two clusters!");
     }
@@ -94,7 +95,7 @@ public class TopicComparer {
 
     // TODO: add dummy Futures
 
-    return compareFutures;
+    return new TopicCompareResult(compareFutures);
   }
 
   private class PartitionCompareThread implements Callable<PartitionCompareResult> {
@@ -114,6 +115,8 @@ public class TopicComparer {
       Properties consumerProps2 = clusterPropertiesMap.get(clusters.get(1));
 
       PartitionCompareResult result = new PartitionCompareResult();
+      result.setTopic(partition.get(0).topic());
+      result.setPartition(partition.get(0).partition());
 
       consumerProps1.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, Murmur2Deserializer.class.getCanonicalName());
       consumerProps1.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, Murmur2Deserializer.class.getCanonicalName());
