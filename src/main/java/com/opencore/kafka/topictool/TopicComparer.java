@@ -157,19 +157,22 @@ public class TopicComparer {
       // Nothing can be guessed from these offsets yet, so no additional checking performed
 
       // Start at beginning of topic
+      logger.debug("Seeking to beginning for partition " + partition.get(0).partition());
       int batchSize = 100;
       consumer1.seekToBeginning(partition);
       consumer2.seekToBeginning(partition);
 
 
-      Long lastComparedOffset1 = 0L;
-      Long lastComparedOffset2 = 0L;
+      Long lastComparedOffset1 = -1L;
+      Long lastComparedOffset2 = -1L;
       List<ConsumerRecord<String, String>> topicRecords1 = new LinkedList<>();
       List<ConsumerRecord<String, String>> topicRecords2 = new LinkedList<>();
 
       int emptyPolls1 = 0;
       int emptyPolls2 = 0;
+      logger.debug("Entering loop..");
       while (lastComparedOffset1 < compareUntilOffset1 && lastComparedOffset2 < compareUntilOffset2) {
+        logger.debug("Entered loop!");
         if (!checkAndPollIfNecessary(consumer1, topicRecords1, batchSize * 2)) {
           logger.trace("Empty poll for cluster " + clusters.get(0));
           emptyPolls1++;
@@ -184,6 +187,7 @@ public class TopicComparer {
         // probably read to the end of our topic
 
         if ((emptyPolls1 > 3 && topicRecords1.isEmpty()) || (emptyPolls2 > 3 && topicRecords2.isEmpty())) {
+          logger.debug("Aborting due to too many empty polls on partition " + partition.get(0).partition());
           // We don't have any records left in one of the topics and have polled unsuccessfully three times
           // so we can safely abort processing
           result.setFailedOffset1(lastComparedOffset1);
@@ -198,6 +202,7 @@ public class TopicComparer {
           // Handling of empty polls and breaking the entire comparison is handled in the
           // wrapping while loop
           if (topicRecords1.isEmpty() || topicRecords2.isEmpty()) {
+            logger.debug("Skipping this comparison, no records present.");
             break;
           }
 
