@@ -135,6 +135,16 @@ public class TopicComparer {
       consumer1.assign(partition);
       consumer2.assign(partition);
 
+      // find current earliest offset
+      Map beginningOffsets1 = consumer1.beginningOffsets(partition);
+      Map beginningOffsets2 = consumer2.beginningOffsets(partition);
+
+      Long startAtOffset1 = (Long) beginningOffsets1.get(partition.get(0)) - 1;
+      Long startAtOffset2 = (Long) beginningOffsets1.get(partition.get(0)) - 1;
+
+      logger.debug("Setting start offsets for partition " + partition.get(0).partition() + " to " + startAtOffset1 + "/" + startAtOffset1);
+
+
       // find current latest offset
       Map endOffsets1 = consumer1.endOffsets(partition);
       Map endOffsets2 = consumer2.endOffsets(partition);
@@ -142,12 +152,16 @@ public class TopicComparer {
       Long compareUntilOffset1 = (Long) endOffsets1.get(partition.get(0)) - 1;
       Long compareUntilOffset2 = (Long) endOffsets2.get(partition.get(0)) - 1;
 
+      logger.debug("Setting end offsets for partition " + partition.get(0).partition() + " to " + compareUntilOffset1 + "/" + compareUntilOffset2);
+
       // Nothing can be guessed from these offsets yet, so no additional checking performed
 
       // Start at beginning of topic
       int batchSize = 100;
       consumer1.seekToBeginning(partition);
       consumer2.seekToBeginning(partition);
+
+
       Long lastComparedOffset1 = 0L;
       Long lastComparedOffset2 = 0L;
       List<ConsumerRecord<String, String>> topicRecords1 = new LinkedList<>();
@@ -207,6 +221,7 @@ public class TopicComparer {
               result.setResult(false);
               return result;
             } else {
+              logger.debug("Match for partition " + partition.get(0).partition() + " - at offsets " + record1.offset() + "/" + record2.offset());
               lastComparedOffset1 = record1.offset();
               lastComparedOffset2 = record2.offset();
             }
