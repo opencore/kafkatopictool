@@ -21,7 +21,7 @@ public class TopicToolCommand {
 
     Map<String, TopicManager> topicManagerMap = new HashMap<>();
     for (String cluster : config.getClusterConfigs().keySet()) {
-      topicManagerMap.put(cluster, new TopicManager(config.getClusterConfig(cluster)));
+      topicManagerMap.put(cluster, new TopicManager(cluster, config.getClusterConfig(cluster)));
     }
 
 

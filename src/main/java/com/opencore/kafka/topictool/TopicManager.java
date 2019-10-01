@@ -12,14 +12,12 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import kafka.security.auth.Topic;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.NewPartitions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
-import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBinding;
@@ -27,8 +25,12 @@ import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.errors.SecurityDisabledException;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopicManager implements AutoCloseable {
+  private String clusterName;
+  private Logger logger = LoggerFactory.getLogger(TopicManager.class);
   private Properties adminClientProperties;
   private AdminClient adminClient;
   private ReplicationFactorManager replicationManager;
@@ -36,7 +38,8 @@ public class TopicManager implements AutoCloseable {
 
   private Map<String, OutputFormatService> availableFormatters;
 
-  public TopicManager(Properties adminClientProperties) {
+  public TopicManager(String clusterName, Properties adminClientProperties) {
+    this.clusterName = clusterName;
     this.adminClientProperties = adminClientProperties;
     adminClient = AdminClient.create(adminClientProperties);
 
@@ -93,14 +96,19 @@ public class TopicManager implements AutoCloseable {
           .collect(Collectors.toSet());
 
       // Describe all topics from list of names
+      logger.debug("Retrieving list of topics from cluster " + clusterName);
       Map<String, TopicDescription> all = adminClient.describeTopics(topicNames).all().get();
+      logger.trace("Got response from cluster " + clusterName);
 
       // Retrieve config for all topics
+      logger.debug("Retrieving configs for all topics from cluster " + clusterName);
       List<ConfigResource> configResourceList = all.keySet()
           .stream()
           .map(topic -> new ConfigResource(ConfigResource.Type.TOPIC, topic))
           .collect(Collectors.toList());
+
       Map<ConfigResource, Config> map = adminClient.describeConfigs(configResourceList).all().get();
+      logger.trace("Got response from cluster " + clusterName);
 
       // Convert to Map<String, Config> for ease of access later on
       Map<String, Config> configAsStringMap = map.keySet()
@@ -119,7 +127,9 @@ public class TopicManager implements AutoCloseable {
       Config configResourceConfigMap = null;
       Map<String, String> configEntries = null;
       try {
+        logger.debug("Retrieving list of live nodes from cluster " + clusterName);
         Collection<Node> nodeList = adminClient.describeCluster().nodes().get();
+        logger.trace("Got response from cluster " + clusterName);
         List<String> list = nodeList
             .stream()
             .map(e -> e.idString())
