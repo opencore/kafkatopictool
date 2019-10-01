@@ -101,11 +101,12 @@ public class TopicManager implements AutoCloseable {
       logger.trace("Got response from cluster " + clusterName);
 
       // Retrieve config for all topics
-      logger.debug("Retrieving configs for all topics from cluster " + clusterName);
       List<ConfigResource> configResourceList = all.keySet()
           .stream()
           .map(topic -> new ConfigResource(ConfigResource.Type.TOPIC, topic))
           .collect(Collectors.toList());
+      logger.debug("Retrieving configs for these topics from cluster " + clusterName + ": " + configResourceList.toString());
+
 
       Map<ConfigResource, Config> map = adminClient.describeConfigs(configResourceList).all().get();
       logger.trace("Got response from cluster " + clusterName);
