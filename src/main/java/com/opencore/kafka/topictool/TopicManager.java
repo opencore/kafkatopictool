@@ -138,6 +138,7 @@ public class TopicManager implements AutoCloseable {
         logger.debug("Got following nodes for cluster " + clusterName + ": " + nodeList.toString());
 
         ConfigResource firstBroker = new ConfigResource(ConfigResource.Type.BROKER, list.get(0));
+
         Map<ConfigResource, Config> configResourceConfigMap1 = adminClient.describeConfigs(Collections.singletonList(firstBroker)).all().get();
         configEntries = configResourceConfigMap1.get(firstBroker).entries()
             .stream()

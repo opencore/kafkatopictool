@@ -68,6 +68,8 @@ public class TopicToolCommand {
       //topicManager.sync(repo.getTopics());
     } else if (config.getConfig().getString("command") == "compare") {
       boolean printMismatchOnly = config.getConfig().getBoolean("mismatchonly");
+      boolean detailed = config.getConfig().getBoolean("detailed");
+
       List<String> topics = config.getList("topics");
       TopicComparer comparer = new TopicComparer(config.getClusterConfigs(), config.getConfig().getInt("threadcount"));
 
@@ -81,6 +83,9 @@ public class TopicToolCommand {
         boolean match = true;
         for (PartitionCompareResult partitionResult : resultMap.get(topic)) {
           match = match && partitionResult.getResult();
+          if (detailed) {
+            System.out.println("Partiton " + partitionResult.getPartition() + ": " + (partitionResult.getResult() ? "MATCH" : "MISMATCH"));
+          }
         }
         if (!printMismatchOnly || (!match && printMismatchOnly)) {
           System.out.println(topic + ": " + (match ? "MATCH" : "MISMATCH"));

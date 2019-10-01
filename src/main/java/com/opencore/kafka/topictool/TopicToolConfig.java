@@ -69,6 +69,10 @@ public class TopicToolConfig {
         .dest("mismatchonly")
         .action(Arguments.storeTrue())
         .help("Print only topics that don't match.");
+    compareParser.addArgument("-d", "--detailed")
+        .dest("detailed")
+        .action(Arguments.storeTrue())
+        .help("Print information per partition.");
 
     Subparser exportParser = subparsers.addParser("export").setDefault("command", "export");
     exportParser.addArgument("-f", "--config-file")
