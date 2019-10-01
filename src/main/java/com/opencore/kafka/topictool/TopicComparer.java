@@ -22,6 +22,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopicComparer {
   Map<String, Properties> clusterPropertiesMap;
@@ -102,6 +104,7 @@ public class TopicComparer {
     private List<TopicPartition> partition;
     private List<String> clusters;
     private boolean success = true;
+    Logger logger = LoggerFactory.getLogger(Thread.currentThread().getName());
 
     public PartitionCompareThread(TopicPartition partition, List<String> clusters) {
       this.partition = Collections.singletonList(partition);
@@ -154,10 +157,12 @@ public class TopicComparer {
       int emptyPolls2 = 0;
       while (lastComparedOffset1 < compareUntilOffset1 && lastComparedOffset2 < compareUntilOffset2) {
         if (!checkAndPollIfNecessary(consumer1, topicRecords1, batchSize * 2)) {
+          logger.trace("Empty poll for cluster " + clusters.get(0));
           emptyPolls1++;
         }
 
         if (!(checkAndPollIfNecessary(consumer2, topicRecords2, batchSize * 2))) {
+          logger.trace("Empty poll for cluster " + clusters.get(1));
           emptyPolls2++;
         }
 
@@ -196,6 +201,7 @@ public class TopicComparer {
             throw(new RuntimeException("Got null record when we did not expect one!"));
           } else if (record1 != null && record2 != null) {
             if (!compareRecords(record1, record2)) {
+              logger.warn("Mismatch in records: " + record1.toString() + " - " + record2.toString());
               result.setFailedOffset1(record1.offset());
               result.setFailedOffset2(record2.offset());
               result.setResult(false);
