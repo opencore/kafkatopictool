@@ -84,7 +84,9 @@ public class TopicToolCommand {
         for (PartitionCompareResult partitionResult : resultMap.get(topic)) {
           match = match && partitionResult.getResult();
           if (detailed) {
-            System.out.println("Partiton " + partitionResult.getPartition() + ": " + (partitionResult.getResult() ? "MATCH" : "MISMATCH"));
+            boolean partResult = partitionResult.getResult();
+            StringBuilder resultString = new StringBuilder();
+            System.out.println("Partition " + partitionResult.getPartition() + ": " + partitionResult.toString());
           }
         }
         if (!printMismatchOnly || (!match && printMismatchOnly)) {

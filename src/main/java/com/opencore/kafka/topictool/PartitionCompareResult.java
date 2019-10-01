@@ -1,5 +1,7 @@
 package com.opencore.kafka.topictool;
 
+import org.apache.kafka.common.protocol.types.Field;
+
 public class PartitionCompareResult {
   String topic;
   int partition;
@@ -46,6 +48,15 @@ public class PartitionCompareResult {
 
   public void setFailedOffset2(Long failedOffset2) {
     this.failedOffset2 = failedOffset2;
+  }
+
+  public String toString() {
+    StringBuilder resultString = new StringBuilder();
+    resultString.append(result ? "MATCH" : "MISMATCH");
+    if (!result) {
+      resultString.append(" - Mismatch at offsets " + failedOffset1 + "/" + failedOffset2);
+    }
+    return resultString.toString();
   }
 }
 
