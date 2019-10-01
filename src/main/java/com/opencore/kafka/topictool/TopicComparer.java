@@ -39,7 +39,7 @@ public class TopicComparer {
 
     for (String clusterName : clusterPropertiesMap.keySet()) {
       Properties clusterProps = clusterPropertiesMap.get(clusterName);
-      managerMap.put(clusterName, new TopicManager(clusterProps));
+      managerMap.put(clusterName, new TopicManager(clusterName, clusterProps));
       adminClientMap.put(clusterName, AdminClient.create(clusterProps));
     }
   }
