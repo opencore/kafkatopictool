@@ -205,7 +205,7 @@ public class TopicComparer {
               result.setFailedOffset1(record1.offset());
               result.setFailedOffset2(record2.offset());
               result.setResult(false);
-              break;
+              return result;
             } else {
               lastComparedOffset1 = record1.offset();
               lastComparedOffset2 = record2.offset();
