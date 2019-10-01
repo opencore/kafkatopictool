@@ -104,7 +104,7 @@ public class TopicComparer {
     private List<TopicPartition> partition;
     private List<String> clusters;
     private boolean success = true;
-    Logger logger = LoggerFactory.getLogger(Thread.currentThread().getName());
+    Logger logger = LoggerFactory.getLogger(PartitionCompareThread.class);
 
     public PartitionCompareThread(TopicPartition partition, List<String> clusters) {
       this.partition = Collections.singletonList(partition);
@@ -203,7 +203,7 @@ public class TopicComparer {
 
           ConsumerRecord<String, String> record1 = ((LinkedList<ConsumerRecord<String, String>>) topicRecords1).poll();
           ConsumerRecord<String, String> record2 = ((LinkedList<ConsumerRecord<String, String>>) topicRecords2).poll();
-
+          logger.debug("Partition " + partition.get(0).partition() + ": comparing offsets - " + record1.offset() + "/" + record2.offset());
           /* Possible scenarios at this point:
           1. Both records are null: we've reached the end of both topics, but will poll again a couple of times, just to be sure
           2. One record is null: we've reached the end of one topic, poll again to be sure -> topics are the same, but one is missing a few messages
