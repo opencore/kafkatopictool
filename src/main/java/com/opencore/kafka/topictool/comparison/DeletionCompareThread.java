@@ -3,7 +3,6 @@ package com.opencore.kafka.topictool.comparison;
 import com.opencore.kafka.topictool.PartitionCompareResult;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.LoggerFactory;
 
@@ -27,10 +26,7 @@ public class DeletionCompareThread extends CompareThread implements Callable<Par
         List<ConsumerRecord<String, String>> topicRecords1 = new LinkedList<>();
         List<ConsumerRecord<String, String>> topicRecords2 = new LinkedList<>();
 
-        int emptyPolls1 = 0;
-        int emptyPolls2 = 0;
-
-        while ((lastPolledOffset1 < compareUntilOffset1 || lastPolledOffset2 < compareUntilOffset2) && (!topicRecords1.isEmpty() || topicRecords2.isEmpty() )) {
+        while ((lastPolledOffset1 < compareUntilOffset1 || lastPolledOffset2 < compareUntilOffset2) && !(topicRecords1.isEmpty() && topicRecords2.isEmpty() )) {
             logger.debug("Polling cluster1 " + topicPartition);
             ConsumerRecords<String, String> records1 = consumer1.poll(Duration.ofSeconds(3));
             logger.debug("Got " + records1.count() + " records for " + topicPartition);
@@ -51,36 +47,7 @@ public class DeletionCompareThread extends CompareThread implements Callable<Par
                 }
             }
 
-
-            /*if (!checkAndPollIfNecessary(consumer1, topicRecords1, BATCHSIZE * 2)) {
-                emptyPolls1++;
-            } else {
-                logger.trace("Resetting emptyPollCount for cluster1.");
-                emptyPolls1 = 0;
-            }
-
-            if (!(checkAndPollIfNecessary(consumer2, topicRecords2, BATCHSIZE * 2))) {
-                emptyPolls2++;
-            } else {
-                logger.trace("Resetting emptyPollCount for cluster1.");
-                emptyPolls2 = 0;
-            }
-            // We should now have at least _batchSize_ records in our queues, if not we
-            // probably read to the end of our topic
-
-            if (emptyPolls1 > 10 && emptyPolls2 > 10 && topicRecords1.isEmpty() && topicRecords2.isEmpty()) {
-                logger.debug("Aborting due to too many empty polls on partition " + partition.get(0).partition());
-                // We don't have any records left in one of the topics and have polled unsuccessfully three times
-                // so we can safely abort processing
-                result.setFailedOffset1(lastPolledOffset1);
-                result.setFailedOffset2(lastPolledOffset2);
-                result.setResult(false);
-                break;
-            }
-
- */
-
-            for (int i = 1; i <= BATCHSIZE; i++) {
+            for (int i = 1; i <= Math.min(topicRecords1.size(), topicRecords2.size()); i++) {
                 // Check if either of our queues is empty, if yes, skip this iteration
                 // Handling of empty polls and breaking the entire comparison is handled in the
                 // wrapping while loop
@@ -135,23 +102,5 @@ public class DeletionCompareThread extends CompareThread implements Callable<Par
         consumer1.close();
         consumer2.close();
         return result;
-    }
-
-    private boolean checkAndPollIfNecessary(KafkaConsumer consumer, List queue, int limit) {
-        if (queue.size() < limit) {
-            ConsumerRecords<String, String> polledRecords = consumer.poll(Duration.ofSeconds(3));
-            if (polledRecords.count() > 0) {
-                for (ConsumerRecord<String, String> record : polledRecords) {
-                    if (record != null) {
-                        queue.add(record);
-                    }
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-        // There are records left in the queue, so no need to count this as an empty poll, since we didn't poll
-        return true;
     }
 }

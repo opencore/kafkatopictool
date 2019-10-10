@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opencore.kafka.topictool.repository.TopicDefinition;
 import com.opencore.kafka.topictool.repository.provider.KafkaRepositoryProvider;
+
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -26,7 +28,7 @@ public class TopicToolCommand {
 
 
     Map<String, Properties> repoProperties = config.getRepoProperties();
-    KafkaRepositoryProvider repo = null;//new KafkaRepositoryProvider(repoProperties.get("kafka"));
+
 
     if (config.getConfig().getString("command") == "export") {
       List<String> cluster = config.getList("cluster");
@@ -57,12 +59,13 @@ public class TopicToolCommand {
 
       System.exit(0);
     } else if (config.getConfig().getString("command") == "sync") {
+      KafkaRepositoryProvider repo = new KafkaRepositoryProvider(repoProperties.get("kafka"));
       for (String clusterName : topicManagerMap.keySet()) {
         TopicManager topicManager = topicManagerMap.get(clusterName);
 
         Map <String, TopicDefinition> topicList = repo.getTopics(clusterName);
         List<NewTopic> tl = topicList.values().stream().map(e -> e.getNewTopic()).collect(Collectors.toList());
-        topicManager.sync(tl);
+        topicManager.sync(tl, config.getConfig().getBoolean("simulate"));
       }
 
       //topicManager.sync(repo.getTopics());
@@ -95,6 +98,14 @@ public class TopicToolCommand {
 
       }
       comparer.close();
+    } else if (config.getConfig().getString("command") == "setoffsets") {
+      OffsetSetter offsetSetter = new OffsetSetter(config.getClusterConfigs());
+      File offsetsFile = config.getConfig().get("offsetsfile");
+      List<String> clusters = config.getList("cluster");
+      List<String> groups = config.getList("groups");
+      List<String> topics = config.getList("topics");
+      boolean useDate = config.getConfig().getBoolean("usedate");
+      offsetSetter.setOffsets(offsetsFile, clusters, useDate);
     }
   }
 }

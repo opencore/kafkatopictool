@@ -86,7 +86,7 @@ public class ReplicationFactorManager {
       }
     }
 
-    gson.toJson(plannedOperations, System.out);
+    //gson.toJson(plannedOperations, System.out);
 
 
   }

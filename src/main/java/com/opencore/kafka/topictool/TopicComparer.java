@@ -36,6 +36,8 @@ public class TopicComparer {
     Map<String, TopicManager> managerMap;
     Map<String, AdminClient> adminClientMap;
     ExecutorService executor = null;
+    private Logger logger = LoggerFactory.getLogger(TopicComparer.class);
+
 
     public TopicComparer(Map<String, Properties> clusterPropertiesMap, int threadCount) {
         this.clusterPropertiesMap = clusterPropertiesMap;
@@ -77,9 +79,9 @@ public class TopicComparer {
         Map<String, NewTopic> topicsInScope2 = new HashMap<>();
 
         for (String pattern : patterns) {
-            List<NewTopic> topics = manager1.getTopics(pattern);
-            topicsInScope1.putAll(manager1.getTopics(pattern).stream().map(e -> (NewTopic) e).collect(Collectors.toMap(e -> e.name(), e -> e)));
-            topicsInScope2.putAll(manager2.getTopics(pattern).stream().map(e -> (NewTopic) e).collect(Collectors.toMap(e -> e.name(), e -> e)));
+            List<NewTopic> topics = manager1.getTopics(pattern, false);
+            topicsInScope1.putAll(manager1.getTopics(pattern, false).stream().map(e -> (NewTopic) e).collect(Collectors.toMap(e -> e.name(), e -> e)));
+            topicsInScope2.putAll(manager2.getTopics(pattern, false).stream().map(e -> (NewTopic) e).collect(Collectors.toMap(e -> e.name(), e -> e)));
         }
 
         // Find topics that exist in both clusters
@@ -91,9 +93,16 @@ public class TopicComparer {
         // Start compare thread per Partition of remaining topics
         List<Future<PartitionCompareResult>> compareFutures = new ArrayList<>();
 
+        logger.debug("Number of topics in both clusters with same partition count that will be compared: " + existingTopicsWithSamePartitionCount.size());
+        boolean compacted = false;
         for (String topic : existingTopicsWithSamePartitionCount) {
             Map<String, String> topicConfigs = topicsInScope1.get(topic).configs();
-            boolean compacted = topicConfigs.get("cleanup.policy").equals("compact");
+            logger.debug("Config for topic " + topic + ": " + topicConfigs);
+            if (topicConfigs == null) {
+                logger.debug("Got null config object for topic " + topic + ", assuming delete as cleanup policy.");
+            } else {
+                compacted = topicConfigs.get("cleanup.policy").equals("compact");
+            }
             for (int i = 0; i < topicsInScope1.get(topic).numPartitions(); i++) {
                 if (compacted) {
                     compareFutures.add(executor.submit(new CompactionCompareThread(new TopicPartition(topic, i), topicConfigs, clusterPropertiesMap)));

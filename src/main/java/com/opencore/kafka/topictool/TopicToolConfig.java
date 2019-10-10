@@ -101,14 +101,33 @@ public class TopicToolConfig {
         .dest("cluster")
         .action(new AppendArgumentAction())
         .help("Limit sync to the specified clusters, if not specified all clusters defined in the config file will be targeted.");
+    syncParser.addArgument("-s", "--simulate")
+            .dest("simulate")
+            .action(Arguments.storeTrue())
+            .help("Don't execute sync actions, print differences only.");
 
-    /*Subparser serverParser = subparsers.addParser("server").setDefault("command", "server");;
-    serverParser.addArgument("-f", "--config-file")
+
+    Subparser setOffsetsParser = subparsers.addParser("set-offsets").setDefault("command", "setoffsets");;
+    setOffsetsParser.addArgument("-f", "--config-file")
         .dest("configfile")
         .required(true)
         .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
         .help("Path and name of file to load Kafka and repository configuration from.");
-    */
+    setOffsetsParser.addArgument("-o", "--offsets-file")
+            .dest("offsetsfile")
+            .required(true)
+            .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
+            .help("A comma separated file to read the offsets from. (Format: topic, partition, consumer-group, offset or date");
+    setOffsetsParser.addArgument("-c", "--cluster")
+            .dest("cluster")
+            .required(true)
+            .action(new AppendArgumentAction())
+            .help("Limit operation to the specified clusters.");
+    setOffsetsParser.addArgument("-d", "--use-date")
+            .dest("usedate")
+            .action(Arguments.storeTrue())
+            .help("Use date instead of offset.");
+
     try {
       parsedCommandLineArgs = argumentParser.parseArgs(commandLineArgs);
     } catch (ArgumentParserException e) {
@@ -200,7 +219,6 @@ public class TopicToolConfig {
       result.put(namePrefix, scopedProperties);
 
     }
-    System.out.println(allClusterProperties);
     return result;
   }
 
