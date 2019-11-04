@@ -1,18 +1,17 @@
 /**
  * Copyright © 2019 Sönke Liebau (soenke.liebau@opencore.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
+
 package com.opencore.kafka.topictool;
 
 import com.google.gson.Gson;
@@ -32,6 +31,7 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 
 public class ReplicationFactorManager {
+
   Properties adminClientProperties;
   AdminZkClient adminZkClient = null;
   KafkaZkClient zkClient = null;
@@ -65,7 +65,10 @@ public class ReplicationFactorManager {
   public void addOperation(TopicDescription topic, short targetReplicationFactor) {
     // Check if there are enough nodes to satisfy the requested replication factor, otherwise skip topic
     if (targetReplicationFactor > liveNodes.size()) {
-      System.out.println("Requested replication factor of " + targetReplicationFactor + " for topic " + topic.name() + " is larger than number of available brokers ("+ liveNodes.size()+ ") - skipping topic!");
+      System.out.println(
+          "Requested replication factor of " + targetReplicationFactor + " for topic " + topic
+              .name() + " is larger than number of available brokers (" + liveNodes.size()
+              + ") - skipping topic!");
       return;
     }
 
@@ -81,28 +84,33 @@ public class ReplicationFactorManager {
     for (TopicPartitionInfo info : partitions) {
       if (info.replicas().size() > targetReplicationFactor) {
         // Just remove enough replicas to get the factor to match
-        partition partitionChange = new partition();
+        Partition partitionChange = new Partition();
         partitionChange.partition = info.partition();
         partitionChange.topic = topicName;
-        partitionChange.replicas = info.replicas().stream().map(e -> e.id()).collect(Collectors.toList()).subList(0, targetReplicationFactor);
+        partitionChange.replicas = info.replicas().stream().map(e -> e.id())
+            .collect(Collectors.toList()).subList(0, targetReplicationFactor);
         plannedOperations.partitions.add(partitionChange);
       } else if (info.replicas().size() < targetReplicationFactor) {
         // Create list of nodes that do not currently hold a replica
-        List<Node> availableNodes = liveNodes.stream().filter(e -> !info.replicas().contains(e)).collect(Collectors.toList());
-        List<Integer> selectedNodes = availableNodes.stream().map(e -> e.id()).collect(Collectors.toList()).subList(0, targetReplicationFactor - info.replicas().size());
+        List<Node> availableNodes = liveNodes.stream().filter(e -> !info.replicas().contains(e))
+            .collect(Collectors.toList());
 
-        partition partitionChange = new partition();
+        Partition partitionChange = new Partition();
         partitionChange.partition = info.partition();
         partitionChange.topic = topicName;
 
-        partitionChange.replicas = info.replicas().stream().map(e -> e.id()).collect(Collectors.toList());
+        // Select nodes from that list until replication factor is satisfied
+        List<Integer> selectedNodes = availableNodes.stream().map(e -> e.id())
+            .collect(Collectors.toList())
+            .subList(0, targetReplicationFactor - info.replicas().size());
+        partitionChange.replicas = info.replicas().stream().map(e -> e.id())
+            .collect(Collectors.toList());
         partitionChange.replicas.addAll(selectedNodes);
         plannedOperations.partitions.add(partitionChange);
       }
     }
 
     //gson.toJson(plannedOperations, System.out);
-
 
   }
 
@@ -114,7 +122,8 @@ public class ReplicationFactorManager {
     if (plannedOperations == null) {
       return;
     }
-    ScalaInterface scalaInterface = new ScalaInterface(AdminClient.create(adminClientProperties), adminClientProperties.getProperty("zookeeper.connect"));
+    ScalaInterface scalaInterface = new ScalaInterface(AdminClient.create(adminClientProperties),
+        adminClientProperties.getProperty("zookeeper.connect"));
     scalaInterface.execute(gson.toJson(plannedOperations));
     plannedOperations = null;
   }
@@ -122,12 +131,15 @@ public class ReplicationFactorManager {
   public boolean isConnected() {
     return zkClient != null && adminZkClient != null;
   }
+
   private class ReassignmentPlan {
+
     int version = 1;
-    List <partition> partitions;
+    List<Partition> partitions;
   }
 
-  private class partition {
+  private class Partition {
+
     String topic;
     int partition;
     List<Integer> replicas;

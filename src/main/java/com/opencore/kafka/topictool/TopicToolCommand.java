@@ -1,25 +1,23 @@
 /**
  * Copyright © 2019 Sönke Liebau (soenke.liebau@opencore.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
+
 package com.opencore.kafka.topictool;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opencore.kafka.topictool.repository.TopicDefinition;
 import com.opencore.kafka.topictool.repository.provider.KafkaRepositoryProvider;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -33,6 +31,7 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.NewTopic;
 
 public class TopicToolCommand {
+
   public static void main(String[] args) {
     TopicToolConfig config = new TopicToolConfig(args);
 
@@ -41,9 +40,7 @@ public class TopicToolCommand {
       topicManagerMap.put(cluster, new TopicManager(cluster, config.getClusterConfig(cluster)));
     }
 
-
     Map<String, Properties> repoProperties = config.getRepoProperties();
-
 
     if (config.getConfig().getString("command") == "export") {
       List<String> cluster = config.getList("cluster");
@@ -78,8 +75,9 @@ public class TopicToolCommand {
       for (String clusterName : topicManagerMap.keySet()) {
         TopicManager topicManager = topicManagerMap.get(clusterName);
 
-        Map <String, TopicDefinition> topicList = repo.getTopics(clusterName);
-        List<NewTopic> tl = topicList.values().stream().map(e -> e.getNewTopic()).collect(Collectors.toList());
+        Map<String, TopicDefinition> topicList = repo.getTopics(clusterName);
+        List<NewTopic> tl = topicList.values().stream().map(e -> e.getNewTopic())
+            .collect(Collectors.toList());
         topicManager.sync(tl, config.getConfig().getBoolean("simulate"));
       }
 
@@ -89,7 +87,8 @@ public class TopicToolCommand {
       boolean detailed = config.getConfig().getBoolean("detailed");
 
       List<String> topics = config.getList("topics");
-      TopicComparer comparer = new TopicComparer(config.getClusterConfigs(), config.getConfig().getInt("threadcount"));
+      TopicComparer comparer = new TopicComparer(config.getClusterConfigs(),
+          config.getConfig().getInt("threadcount"));
 
       List<String> clusterList = new ArrayList<>();
       clusterList.addAll(config.getClusterConfigs().keySet());
@@ -104,7 +103,8 @@ public class TopicToolCommand {
           if (detailed) {
             boolean partResult = partitionResult.getResult();
             StringBuilder resultString = new StringBuilder();
-            System.out.println("Partition " + partitionResult.getPartition() + ": " + partitionResult.toString());
+            System.out.println(
+                "Partition " + partitionResult.getPartition() + ": " + partitionResult.toString());
           }
         }
         if (!printMismatchOnly || (!match && printMismatchOnly)) {

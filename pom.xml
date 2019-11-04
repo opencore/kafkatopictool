@@ -100,6 +100,25 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <failOnViolation>true</failOnViolation>
+          <failsOnError>true</failsOnError>
+        </configuration>
+        <executions>
+          <execution>
+            <id>analyze-compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
       <!-- Run findBugs in testing phase and generate an HTML report for all found errors -->
       <plugin>
@@ -118,7 +137,7 @@
           <!-- Produces XML report -->
           <xmlOutput>true</xmlOutput>
           <!-- Configures the directory in which the XML report is created -->
-          <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+          <findbugsXmlOutputDirectory>${project.build.directory}/findbugs/xml</findbugsXmlOutputDirectory>
           <failOnError>false</failOnError>
         </configuration>
         <executions>
@@ -150,7 +169,7 @@
         <configuration>
           <transformationSets>
             <transformationSet>
-              <dir>${project.build.directory}/findbugs</dir>
+              <dir>${project.build.directory}/findbugs/xml</dir>
               <outputDir>${project.build.directory}/findbugs</outputDir>
               <!--<stylesheet>fancy-hist.xsl</stylesheet>-->
               <!--<stylesheet>default.xsl</stylesheet>-->
@@ -161,6 +180,18 @@
                 <fileMapper
                     implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
                   <targetExtension>.html</targetExtension>
+                </fileMapper>
+              </fileMappers>
+            </transformationSet>
+            <transformationSet>
+              <dir>target\</dir>
+              <stylesheet>checkstyle\checkstyle-author.xsl</stylesheet>
+              <includes>checkstyle-result.xml</includes>
+              <fileMappers>
+                <fileMapper
+                    implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
+                  <pattern>\.xml$</pattern>
+                  <replacement>.html</replacement>
                 </fileMapper>
               </fileMappers>
             </transformationSet>
