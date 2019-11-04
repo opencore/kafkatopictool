@@ -30,12 +30,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>8</maven.compiler.release>
     <deployment.repository.id>ossrh</deployment.repository.id>
     <deployment.repository.snapshot-id>${deployment.repository.id}</deployment.repository.snapshot-id>
     <deployment.repository.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</deployment.repository.url>
-    <deployment.repository.snapshot-url>https://oss.sonatype.org/content/repositories/snapshots</deployment.repository.snapshot-url>
+    <deployment.repository.snapshot-url>https://oss.sonatype.org/content/repositories/snapshots
+    </deployment.repository.snapshot-url>
   </properties>
 
   <dependencies>
@@ -100,6 +100,82 @@
 
   <build>
     <plugins>
+
+      <!-- Run findBugs in testing phase and generate an HTML report for all found errors -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>3.0.5</version>
+        <configuration>
+          <!--
+              Enables analysis which takes more memory but finds more bugs.
+              If you run out of memory, changes the value of the effort element
+              to 'Low'.
+          -->
+          <effort>Max</effort>
+          <!-- Reports all bugs (other values are medium and max) -->
+          <threshold>Low</threshold>
+          <!-- Produces XML report -->
+          <xmlOutput>true</xmlOutput>
+          <!-- Configures the directory in which the XML report is created -->
+          <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+          <failOnError>false</failOnError>
+        </configuration>
+        <executions>
+          <!--
+              Ensures that FindBugs inspects source code when project is compiled.
+          -->
+          <execution>
+            <id>analyze-compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>xml-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>transform</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <transformationSets>
+            <transformationSet>
+              <dir>${project.build.directory}/findbugs</dir>
+              <outputDir>${project.build.directory}/findbugs</outputDir>
+              <!--<stylesheet>fancy-hist.xsl</stylesheet>-->
+              <!--<stylesheet>default.xsl</stylesheet>-->
+              <!--<stylesheet>plain.xsl</stylesheet>-->
+              <stylesheet>fancy.xsl</stylesheet>
+              <!--<stylesheet>summary.xsl</stylesheet>-->
+              <fileMappers>
+                <fileMapper
+                    implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                  <targetExtension>.html</targetExtension>
+                </fileMapper>
+              </fileMappers>
+            </transformationSet>
+          </transformationSets>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>findbugs</artifactId>
+            <version>3.0.1</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <!-- Check if all required files have a license header -->
       <plugin>
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
@@ -127,6 +203,8 @@
           </execution>
         </executions>
       </plugin>
+
+
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -178,10 +256,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.7.0</version>
+        <version>3.8.0</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <release>${maven.compiler.release}</release>
         </configuration>
       </plugin>
     </plugins>
@@ -229,6 +306,7 @@
       </plugins>
     </pluginManagement>
   </build>
+
   <distributionManagement>
     <snapshotRepository>
       <id>${deployment.repository.snapshot-id}</id>
