@@ -80,8 +80,10 @@ public class CommandLineClient {
               + " is not specified in the current config file, no action will be taken for this cluster.");
           continue;
         }
+
         // At this point we are sure that we know this cluster and can schedule the sync
-        commands.add(new SyncCommand(sourceRepository, currentCluster, simulate));
+        String topicPattern = config.getConfig().getString(TopicToolConfig.TOPICPATTERN_OPTION_NAME);
+        commands.add(new SyncCommand(sourceRepository, currentCluster, simulate, topicPattern));
       }
     } else if (config.getConfig().getString(TopicToolConfig.COMMAND_OPTION_NAME)
         .equals(TopicToolConfig.COMPARE_COMMAND_NAME)) {
