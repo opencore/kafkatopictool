@@ -1,6 +1,6 @@
 package com.opencore.kafka.topictool.command;
 
-public class SyncCommand extends TopicToolCommand{
+public class SyncCommand extends TopicToolCommand {
 
   public SyncCommand() {
     super();

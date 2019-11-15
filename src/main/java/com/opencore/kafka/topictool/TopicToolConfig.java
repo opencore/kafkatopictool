@@ -15,9 +15,12 @@
 package com.opencore.kafka.topictool;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -132,7 +135,8 @@ public class TopicToolConfig {
     exportParser.addArgument("-o", "--output-format")
         .dest(OUTPUTFORMAT_OPTION_NAME)
         .setDefault(OUTPUTFORMAT_OPTION_DEFAULT)
-        .help("Output format to use for formatting the export file. Available formatters are: " + TopicTool.getOutputFormatList().toString());
+        .help("Output format to use for formatting the export file. Available formatters are: "
+            + TopicTool.getOutputFormatList().toString());
 
     Subparser syncParser = subparsers.addParser(SYNC_COMMAND_NAME).setDefault(COMMAND_OPTION_NAME,
         SYNC_COMMAND_NAME);
@@ -149,7 +153,8 @@ public class TopicToolConfig {
     syncParser.addArgument("-r", "--repository")
         .dest(REPOSITORY_OPTION_NAME)
         .required(true)
-        .help("The name of the repository that holds the target state definition to be created on the clusters.");
+        .help(
+            "The name of the repository that holds the target state definition to be created on the clusters.");
     syncParser.addArgument("-s", "--simulate")
         .dest(SIMULATE_OPTION_NAME)
         .action(Arguments.storeTrue())
@@ -169,8 +174,8 @@ public class TopicToolConfig {
     // Read config file if one was specified
     File configFile = parsedCommandLineArgs.get("configfile");
     if (configFile != null) {
-      try {
-        FileReader configReader = new FileReader(configFile);
+      try (Reader configReader = new InputStreamReader(new FileInputStream(configFile),
+          StandardCharsets.UTF_8)) {
         adminClientProps.load(configReader);
       } catch (FileNotFoundException e) {
         System.out

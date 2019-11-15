@@ -27,20 +27,14 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.NewPartitions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.Node;
-import org.apache.kafka.common.acl.AccessControlEntryFilter;
-import org.apache.kafka.common.acl.AclBinding;
-import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.ConfigResource.Type;
-import org.apache.kafka.common.errors.SecurityDisabledException;
-import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +75,8 @@ public class TopicManager implements AutoCloseable {
     try {
       topicPartitions = adminClient.describeTopics(Collections.singletonList(topic)).all().get();
     } catch (InterruptedException | ExecutionException e) {
-      e.printStackTrace();
+      System.out.println("Unable to describe topics on the cluster, aborting: " + e.getMessage());
+      System.exit(3);
     }
     return topicPartitions.get(topic);
   }
@@ -282,7 +277,9 @@ public class TopicManager implements AutoCloseable {
             .filter(setting -> !targetConfigs.get(setting).equals(currentConfigs.get(setting)))
             .collect(Collectors.toList());
         for (String setting : nonMatchingSettings) {
-          System.out.println("Changing topic setting " + setting + " from " + currentConfigs.get(setting) + " to " + targetConfigs.get(setting));
+          System.out.println(
+              "Changing topic setting " + setting + " from " + currentConfigs.get(setting) + " to "
+                  + targetConfigs.get(setting));
         }
 
         List<String> removedSettings =
@@ -341,29 +338,11 @@ public class TopicManager implements AutoCloseable {
         adminClient.alterConfigs(configChangeOperations);
         replicationManager.executeOperations();
       } catch (InterruptedException | ExecutionException e) {
-        e.printStackTrace();
+        System.out
+            .println("Exceptions ocurred during execution of an operation: " + e.getMessage());
       }
     } else {
-      System.out.println("Bypassing execute step!");
-    }
-
-    // ==== Manage ACLs
-    AclBindingFilter allTopics = new AclBindingFilter(ResourcePatternFilter.ANY,
-        AccessControlEntryFilter.ANY);
-
-    try {
-      Collection<AclBinding> aclList = adminClient.describeAcls(allTopics).values().get();
-    } catch (SecurityDisabledException se) {
-      System.out.println("No authorizer is configured on the broker, skipping ACL sync step.");
-    } catch (InterruptedException ie) {
-      System.out.println("InterruptedException: " + ie.getMessage());
-    } catch (ExecutionException ex) {
-      Throwable cause = ex.getCause();
-      if (cause instanceof SecurityDisabledException) {
-        System.out.println("No authorizer is configured on the broker, skipping ACL sync step.");
-      } else {
-        System.out.println("ExecutionException: " + ex.getMessage());
-      }
+      System.out.println("Running in simulation mode, bypassing execute step!");
     }
   }
 

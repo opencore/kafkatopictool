@@ -11,9 +11,12 @@ import com.opencore.kafka.topictool.command.TopicToolCommandResult;
 import com.opencore.kafka.topictool.output.OutputFormatService;
 import com.opencore.kafka.topictool.repository.TopicDefinition;
 import com.opencore.kafka.topictool.repository.provider.RepositoryProviderService;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
+import javax.sound.sampled.AudioFormat.Encoding;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -32,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Main class that provides the functionality to administer topics and ACLs in Kafka.
  *
- * This will be instantiated by clients and passed TopicToolCommand objects that describe the
+ * <p>This will be instantiated by clients and passed TopicToolCommand objects that describe the
  * actions to be taken.
  */
 public class TopicTool {
@@ -126,26 +130,6 @@ public class TopicTool {
     return availableFormatters;
   }
 
-  public TopicToolCommandResult execute(TopicToolCommand command) {
-    switch (command.getAction()) {
-      case Action.COMPARE:
-        return (executeCompare((CompareCommand) command));
-
-      case Action.EXPORT:
-        return (executeExport((ExportCommand) command));
-
-      case Action.SYNC:
-        return (executeSync((SyncCommand) command));
-
-      default:
-        // Unknown action type, either an error or maybe
-        // a version mismatch
-        System.out.println("Unknown command type encountered, skipping action!");
-    }
-
-    return new TopicToolCommandResult();
-  }
-
   private TopicToolCommandResult executeCompare(CompareCommand command) {
     boolean printMismatchOnly =
         config.getConfig().getBoolean(TopicToolConfig.MISMATCHONLY_OPTION_NAME);
@@ -166,8 +150,6 @@ public class TopicTool {
       for (PartitionCompareResult partitionResult : resultMap.get(topic)) {
         match = match && partitionResult.isMatch();
         if (detailed) {
-          boolean partResult = partitionResult.isMatch();
-          StringBuilder resultString = new StringBuilder();
           System.out.println(
               "Partition " + partitionResult.getPartition() + ": " + partitionResult.toString());
         }
@@ -206,8 +188,6 @@ public class TopicTool {
   }
 
   private TopicToolCommandResult executeExport(ExportCommand command) {
-    Gson gson = new GsonBuilder().create();
-
     String clusterName = command.getSourceCluster();
     TopicManager clusterManager = topicManagerMap.get(clusterName);
     List<TopicDefinition> topicsToExport = clusterManager.getTopics()
@@ -220,7 +200,7 @@ public class TopicTool {
       logger.error("Unable to load outputformatter for format " + command.getOutputFormat() + "skipping export for cluster " + clusterName);
       return new TopicToolCommandResult();
     }
-    try (Writer writer = new FileWriter(command.getFilePrefix() + clusterName + ".json")) {
+    try (Writer writer = new OutputStreamWriter(new FileOutputStream(command.getFilePrefix() + clusterName + ".json"),StandardCharsets.UTF_8)) {
       outputFormatter.format(topicsToExport, writer);
     } catch (IOException e) {
       System.out.println(e.getMessage());
@@ -236,6 +216,26 @@ public class TopicTool {
       result.add(execute(currentCommand));
     }
     return result;
+  }
+
+  public TopicToolCommandResult execute(TopicToolCommand command) {
+    switch (command.getAction()) {
+      case Action.COMPARE:
+        return (executeCompare((CompareCommand) command));
+
+      case Action.EXPORT:
+        return (executeExport((ExportCommand) command));
+
+      case Action.SYNC:
+        return (executeSync((SyncCommand) command));
+
+      default:
+        // Unknown action type, either an error or maybe
+        // a version mismatch
+        System.out.println("Unknown command type encountered, skipping action!");
+    }
+
+    return new TopicToolCommandResult();
   }
 
   public boolean isClusterConfigured(String clusterName) {

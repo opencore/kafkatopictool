@@ -20,14 +20,12 @@ import com.opencore.kafka.ScalaInterface;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import kafka.zk.AdminZkClient;
 import kafka.zk.KafkaZkClient;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
@@ -53,7 +51,8 @@ public class ReplicationFactorManager {
     try {
       liveNodes = adminClient.describeCluster().nodes().get();
     } catch (InterruptedException | ExecutionException e) {
-      e.printStackTrace();
+      System.out.println("Exception ocurred when retrieving list of live brokers from cluster, aborting operation: " + e.getMessage());
+      return;
     }
 
     // If there is a node that has no rack assigned we will not use rack aware assignments

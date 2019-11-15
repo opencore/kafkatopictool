@@ -19,7 +19,7 @@ import com.google.gson.GsonBuilder;
 
 public class PrettyJsonOutputFormat extends JsonOutputFormat {
 
-  public static String FORMAT_NAME = "prettyjson";
+  public static final String FORMAT_NAME = "prettyjson";
 
   @Override
   public String formatName() {

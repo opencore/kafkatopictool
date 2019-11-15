@@ -23,7 +23,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 
 public class JsonOutputFormat implements OutputFormatService {
 
-  public static String FORMAT_NAME = "json";
+  public static final String FORMAT_NAME = "json";
 
   Gson gson;
 

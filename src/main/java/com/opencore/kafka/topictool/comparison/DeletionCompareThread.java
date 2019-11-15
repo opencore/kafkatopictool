@@ -64,9 +64,8 @@ public class DeletionCompareThread extends CompareThread implements
     /*while ((lastPolledOffset1 < compareUntilOffset1 || lastPolledOffset2 < compareUntilOffset2)
         && !(topicRecords1.isEmpty() && topicRecords2.isEmpty())
         && emptyPolls < 5) { */
-    while (lastPolledOffset1 < compareUntilOffset1 &&
-        lastPolledOffset2 < compareUntilOffset2 &&
-        emptyPolls < 5) {
+    while (lastPolledOffset1 < compareUntilOffset1 && lastPolledOffset2 < compareUntilOffset2
+        && emptyPolls < 5) {
       while (!(topicRecords1.isEmpty() || topicRecords2.isEmpty())) {
         // Check if either of our queues is empty, if yes, skip this iteration
         // Handling of empty polls and breaking the entire comparison is handled in the
@@ -137,10 +136,13 @@ public class DeletionCompareThread extends CompareThread implements
     // 2. One or both of the topic were read past the endoffset we looked up at
     //    the beginning - topic is still being written to
 
-    logger.debug("Sizes of queues for " + topicPartition + " after comparison loop: " + topicRecords1.size() + "/"
-        + topicRecords2.size());
+    logger.debug(
+        "Sizes of queues for " + topicPartition + " after comparison loop: " + topicRecords1.size()
+            + "/"
+            + topicRecords2.size());
     if (lastPolledOffset1 > compareUntilOffset1 || lastPolledOffset2 > compareUntilOffset2) {
-      logger.debug(topicPartition + " had records written to it since the comparison started, results may be incorrect.");
+      logger.debug(topicPartition
+          + " had records written to it since the comparison started, results may be incorrect.");
       result.setResult(PartitionCompareResult.ACTIVE);
     } else if (!(topicRecords1.isEmpty() && topicRecords2.isEmpty())) {
       // no topic was read past the calculated end offset, but we still have messages left

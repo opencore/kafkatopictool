@@ -31,7 +31,7 @@ public class KafkaRepositoryProvider implements RepositoryProviderService {
 
 
   public KafkaRepositoryProvider(Properties repoProperties) {
-   configure(repoProperties);
+    configure(repoProperties);
   }
 
   @Override

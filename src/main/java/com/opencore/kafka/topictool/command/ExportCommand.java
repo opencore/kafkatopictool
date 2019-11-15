@@ -1,6 +1,7 @@
 package com.opencore.kafka.topictool.command;
 
-public class ExportCommand extends TopicToolCommand{
+public class ExportCommand extends TopicToolCommand {
+
   private String filePrefix;
   private String outputFormat;
 
@@ -23,12 +24,14 @@ public class ExportCommand extends TopicToolCommand{
     this.filePrefix = filePrefix;
   }
 
-  public ExportCommand(String sourceCluster, String targetFile, boolean simulate, String filePrefix) {
+  public ExportCommand(String sourceCluster, String targetFile, boolean simulate,
+      String filePrefix) {
     this(sourceCluster, targetFile, simulate);
     this.setFilePrefix(filePrefix);
   }
 
-  public ExportCommand(String sourceCluster, String targetFile, boolean simulate, String filePrefix, String outputFormat) {
+  public ExportCommand(String sourceCluster, String targetFile, boolean simulate, String filePrefix,
+      String outputFormat) {
     this(sourceCluster, targetFile, simulate, filePrefix);
     this.setOutputFormat(outputFormat);
   }

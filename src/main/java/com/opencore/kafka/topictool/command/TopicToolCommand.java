@@ -14,28 +14,6 @@
 
 package com.opencore.kafka.topictool.command;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.opencore.kafka.topictool.OffsetSetter;
-import com.opencore.kafka.topictool.PartitionCompareResult;
-import com.opencore.kafka.topictool.TopicCompareResult;
-import com.opencore.kafka.topictool.TopicComparer;
-import com.opencore.kafka.topictool.TopicManager;
-import com.opencore.kafka.topictool.TopicToolConfig;
-import com.opencore.kafka.topictool.repository.TopicDefinition;
-import com.opencore.kafka.topictool.repository.provider.KafkaRepositoryProvider;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import org.apache.kafka.clients.admin.NewTopic;
-
 /**
  * A class that represents a command for the TopicTool to execute.
  * Currently implemented commands are:
@@ -43,7 +21,7 @@ import org.apache.kafka.clients.admin.NewTopic;
  *  - compare
  *  - export
  *
- *  Objects of this class should be created by various clients and
+ *  <p>Objects of this class should be created by various clients and
  *  passed into this lib to be executed.
  */
 public abstract class TopicToolCommand {
@@ -95,58 +73,5 @@ public abstract class TopicToolCommand {
 
   public void setSourceCluster(String sourceCluster) {
     this.sourceCluster = sourceCluster;
-  }
-
-  public static void main(String[] args) {
-    TopicToolConfig config = new TopicToolConfig(args);
-
-
-    Map<String, TopicManager> topicManagerMap = new HashMap<>();
-    for (String cluster : config.getClusterConfigs().keySet()) {
-      topicManagerMap.put(cluster, new TopicManager(cluster, config.getClusterConfig(cluster)));
-    }
-
-    Map<String, Properties> repoProperties = config.getRepoConfigs();
-
-    if (config.getConfig().getString("command") == "compare") {
-      boolean printMismatchOnly = config.getConfig().getBoolean("mismatchonly");
-      boolean detailed = config.getConfig().getBoolean("detailed");
-
-      List<String> topics = config.getList("topics");
-      TopicComparer comparer = new TopicComparer(config.getClusterConfigs(),
-          config.getConfig().getInt("threadcount"));
-
-      List<String> clusterList = new ArrayList<>();
-      clusterList.addAll(config.getClusterConfigs().keySet());
-      TopicCompareResult result = comparer.compare(topics, clusterList);
-
-      Map<String, List<PartitionCompareResult>> resultMap = result.all();
-      System.out.println("Compared " + resultMap.size() + " topics..");
-      for (String topic : resultMap.keySet().stream().sorted().collect(Collectors.toList())) {
-        boolean match = true;
-        for (PartitionCompareResult partitionResult : resultMap.get(topic)) {
-          match = match && partitionResult.isMatch();
-          if (detailed) {
-            boolean partResult = partitionResult.isMatch();
-            StringBuilder resultString = new StringBuilder();
-            System.out.println(
-                "Partition " + partitionResult.getPartition() + ": " + partitionResult.toString());
-          }
-        }
-        if (!printMismatchOnly || (!match && printMismatchOnly)) {
-          System.out.println(topic + ": " + (match ? "MATCH" : "MISMATCH"));
-        }
-
-      }
-      comparer.close();
-    } else if (config.getConfig().getString("command") == "setoffsets") {
-      OffsetSetter offsetSetter = new OffsetSetter(config.getClusterConfigs());
-      File offsetsFile = config.getConfig().get("offsetsfile");
-      List<String> clusters = config.getList("cluster");
-      List<String> groups = config.getList("groups");
-      List<String> topics = config.getList("topics");
-      boolean useDate = config.getConfig().getBoolean("usedate");
-      offsetSetter.setOffsets(offsetsFile, clusters, useDate);
-    }
   }
 }
