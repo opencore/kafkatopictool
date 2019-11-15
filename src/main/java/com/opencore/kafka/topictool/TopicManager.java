@@ -279,7 +279,7 @@ public class TopicManager implements AutoCloseable {
             .collect(Collectors.toList());
         for (String setting : nonMatchingSettings) {
           System.out.println(
-              "Changing topic setting " + setting + " from " + currentConfigs.get(setting) + " to "
+              "Topic " + topicToModify +" - changing setting " + setting + " from " + currentConfigs.get(setting) + " to "
                   + targetConfigs.get(setting));
         }
 
@@ -287,7 +287,7 @@ public class TopicManager implements AutoCloseable {
             currentConfigs.keySet().stream().filter(setting -> !targetConfigs.containsKey(setting))
                 .collect(Collectors.toList());
         for (String setting : removedSettings) {
-          System.out.println("Removing topic setting " + setting + " from target topic.");
+          System.out.println("Topic " + topicToModify +" - removing setting " + setting);
         }
       }
 
