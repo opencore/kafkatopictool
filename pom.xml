@@ -16,8 +16,9 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.opencore.kafka</groupId>
@@ -32,8 +33,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>8</maven.compiler.release>
     <deployment.repository.id>ossrh</deployment.repository.id>
-    <deployment.repository.snapshot-id>${deployment.repository.id}</deployment.repository.snapshot-id>
-    <deployment.repository.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</deployment.repository.url>
+    <deployment.repository.snapshot-id>${deployment.repository.id}
+    </deployment.repository.snapshot-id>
+    <deployment.repository.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/
+    </deployment.repository.url>
     <deployment.repository.snapshot-url>https://oss.sonatype.org/content/repositories/snapshots
     </deployment.repository.snapshot-url>
   </properties>
@@ -95,7 +98,11 @@
       <artifactId>commons-lang</artifactId>
       <version>2.6</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>28.1-jre</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -137,7 +144,8 @@
           <!-- Produces XML report -->
           <xmlOutput>true</xmlOutput>
           <!-- Configures the directory in which the XML report is created -->
-          <findbugsXmlOutputDirectory>${project.build.directory}/findbugs/xml</findbugsXmlOutputDirectory>
+          <findbugsXmlOutputDirectory>${project.build.directory}/findbugs/xml
+          </findbugsXmlOutputDirectory>
           <failOnError>false</failOnError>
         </configuration>
         <executions>
@@ -178,7 +186,7 @@
               <!--<stylesheet>summary.xsl</stylesheet>-->
               <fileMappers>
                 <fileMapper
-                    implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                  implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
                   <targetExtension>.html</targetExtension>
                 </fileMapper>
               </fileMappers>
@@ -189,7 +197,7 @@
               <includes>checkstyle-result.xml</includes>
               <fileMappers>
                 <fileMapper
-                    implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
+                  implementation="org.codehaus.plexus.components.io.filemappers.RegExpFileMapper">
                   <pattern>\.xml$</pattern>
                   <replacement>.html</replacement>
                 </fileMapper>
@@ -241,7 +249,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.opencore.kafka.topictool.TopicToolCommand</mainClass>
+              <mainClass>com.opencore.kafka.topictool.CommandLineClient</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

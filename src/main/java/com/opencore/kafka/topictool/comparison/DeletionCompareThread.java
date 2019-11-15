@@ -16,6 +16,7 @@ package com.opencore.kafka.topictool.comparison;
 
 import com.opencore.kafka.topictool.PartitionCompareResult;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.LoggerFactory;
 
@@ -44,29 +46,28 @@ public class DeletionCompareThread extends CompareThread implements
     List<ConsumerRecord<String, String>> topicRecords1 = new LinkedList<>();
     List<ConsumerRecord<String, String>> topicRecords2 = new LinkedList<>();
 
-    while ((lastPolledOffset1 < compareUntilOffset1 || lastPolledOffset2 < compareUntilOffset2)
-        && !(topicRecords1.isEmpty() && topicRecords2.isEmpty())) {
-      logger.debug("Polling cluster1 " + topicPartition);
-      ConsumerRecords<String, String> records1 = consumer1.poll(Duration.ofSeconds(3));
-      logger.debug("Got " + records1.count() + " records for " + topicPartition);
+    logger.debug("Polling cluster1 " + topicPartition);
+    topicRecords1.addAll(poll(consumer1));
+    logger.debug("Polling cluster2 " + topicPartition);
+    topicRecords2.addAll(poll(consumer2));
 
-      for (ConsumerRecord<String, String> record : records1) {
-        if (record != null) {
-          topicRecords1.add(record);
-        }
-      }
+    int emptyPolls = 0;
 
-      logger.debug("Polling cluster2 " + topicPartition);
-      ConsumerRecords<String, String> records2 = consumer2.poll(Duration.ofSeconds(3));
-      logger.debug("Got " + records2.count() + " records for " + topicPartition);
+    // This is the main comparison loop, logic is:
+    // - Compare message by message until one of the two buffers is empty.
+    // - Poll both topics
+    // - Rerun comparison
+    // - Break when we have seen at least five consecutive empty polls on
+    //   both topics or both topics have been read beyond the
+    //   largest offset we initially measured
 
-      for (ConsumerRecord<String, String> record : records2) {
-        if (record != null) {
-          topicRecords2.add(record);
-        }
-      }
-
-      for (int i = 1; i <= Math.min(topicRecords1.size(), topicRecords2.size()); i++) {
+    /*while ((lastPolledOffset1 < compareUntilOffset1 || lastPolledOffset2 < compareUntilOffset2)
+        && !(topicRecords1.isEmpty() && topicRecords2.isEmpty())
+        && emptyPolls < 5) { */
+    while (lastPolledOffset1 < compareUntilOffset1 &&
+        lastPolledOffset2 < compareUntilOffset2 &&
+        emptyPolls < 5) {
+      while (!(topicRecords1.isEmpty() || topicRecords2.isEmpty())) {
         // Check if either of our queues is empty, if yes, skip this iteration
         // Handling of empty polls and breaking the entire comparison is handled in the
         // wrapping while loop
@@ -100,7 +101,7 @@ public class DeletionCompareThread extends CompareThread implements
             logger.debug("Mismatch in records: " + record1.toString() + " - " + record2.toString());
             result.setFailedOffset1(record1.offset());
             result.setFailedOffset2(record2.offset());
-            result.setResult(false);
+            result.setResult(PartitionCompareResult.MISMATCH);
             return result;
           } else {
             logger.trace("Match for partition " + partition.get(0)
@@ -110,24 +111,60 @@ public class DeletionCompareThread extends CompareThread implements
           }
         }
       }
+
+      logger.debug("Polling cluster1 " + topicPartition);
+      List<ConsumerRecord<String, String>> pollResult1 = poll(consumer1);
+      topicRecords1.addAll(pollResult1);
+
+      logger.debug("Polling cluster2 " + topicPartition);
+      List<ConsumerRecord<String, String>> pollResult2 = poll(consumer2);
+      topicRecords2.addAll(pollResult2);
+
+      // Check if both polls were empty and keep a count
+      if (pollResult2.isEmpty() && pollResult1.isEmpty()) {
+        logger.debug("Empty poll on both topics..");
+        emptyPolls++;
+      } else {
+        logger.debug("Resetting empty poll counter..");
+        emptyPolls = 0;
+      }
     }
 
-    logger.debug("Sizes of queues for " + topicPartition + ": " + topicRecords1.size() + "/"
+    // If we made it here, all compared messages were equal
+    // There are still scenarios that need to be treated differently
+    // from a full on match:
+    // 1. Data left in one of the two topics - one topic is not fully caught up
+    // 2. One or both of the topic were read past the endoffset we looked up at
+    //    the beginning - topic is still being written to
+
+    logger.debug("Sizes of queues for " + topicPartition + " after comparison loop: " + topicRecords1.size() + "/"
         + topicRecords2.size());
-
-    if (!result.getResult()) {
-      // There was a failed record in this batch, we can stop processing
-
-      // Close consumers
-      consumer1.close();
-      consumer2.close();
-
-      // return
-      return result;
+    if (lastPolledOffset1 > compareUntilOffset1 || lastPolledOffset2 > compareUntilOffset2) {
+      logger.debug(topicPartition + " had records written to it since the comparison started, results may be incorrect.");
+      result.setResult(PartitionCompareResult.ACTIVE);
+    } else if (!(topicRecords1.isEmpty() && topicRecords2.isEmpty())) {
+      // no topic was read past the calculated end offset, but we still have messages left
+      // for one of them, so there have to be additional messages in one of the topics
+      result.setResult(PartitionCompareResult.PARTIAL);
     }
     // Close consumers
     consumer1.close();
     consumer2.close();
     return result;
+  }
+
+  private List<ConsumerRecord<String, String>> poll(KafkaConsumer consumer) {
+    logger.debug("Polling  " + topicPartition);
+    ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
+    logger.debug("Got " + records.count() + " records for " + topicPartition);
+
+    List<ConsumerRecord<String, String>> result = new ArrayList<>();
+    for (ConsumerRecord<String, String> record : records) {
+      if (record != null) {
+        result.add(record);
+      }
+    }
+    return result;
+
   }
 }

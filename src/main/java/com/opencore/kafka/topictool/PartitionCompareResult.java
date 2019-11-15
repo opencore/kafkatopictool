@@ -15,10 +15,16 @@
 package com.opencore.kafka.topictool;
 
 public class PartitionCompareResult {
+  public static final int MATCH = 0;
+  public static final int MISMATCH = 1;
+  public static final int PARTIAL = 2;
+  public static final int ACTIVE = 3;
+  private static final String[] RESULT_NAMES = {"Match","Mismatch","Partial","Active"};
+
 
   String topic;
   int partition;
-  boolean result = true;
+  int result = MATCH;
   Long failedOffset1 = -1L;
   Long failedOffset2 = -1L;
 
@@ -38,12 +44,16 @@ public class PartitionCompareResult {
     this.partition = partition;
   }
 
-  public boolean getResult() {
+  public int getResult() {
     return result;
   }
 
-  public void setResult(boolean result) {
+  public void setResult(int result) {
     this.result = result;
+  }
+
+  public boolean isMatch() {
+    return result == MATCH;
   }
 
   public Long getFailedOffset1() {
@@ -64,9 +74,11 @@ public class PartitionCompareResult {
 
   public String toString() {
     StringBuilder resultString = new StringBuilder();
-    resultString.append(result ? "MATCH" : "MISMATCH");
-    if (!result) {
+    resultString.append(RESULT_NAMES[result]);
+    if (result == MISMATCH) {
       resultString.append(" - Mismatch at offsets " + failedOffset1 + "/" + failedOffset2);
+    } else if (result == PARTIAL) {
+      resultString.append(" - Topic contents were the same, but one topic contains additional messages.");
     }
     return resultString.toString();
   }

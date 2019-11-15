@@ -16,6 +16,8 @@ package com.opencore.kafka.topictool.output;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.opencore.kafka.topictool.repository.TopicDefinition;
+import java.io.Writer;
 import java.util.List;
 import org.apache.kafka.clients.admin.NewTopic;
 
@@ -39,8 +41,7 @@ public class JsonOutputFormat implements OutputFormatService {
   }
 
   @Override
-  public String format(List<NewTopic> topicList) {
-    gson.toJson(topicList, System.out);
-    return null;
+  public void format(List<TopicDefinition> topicList, Writer writer) {
+    gson.toJson(topicList, writer);
   }
 }

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -37,6 +38,28 @@ public class TopicToolConfig {
 
   public static final String CLUSTER_PREFIX = "cluster";
   public static final String REPO_PREFIX = "repository";
+
+  // Define values for positional command argument
+  public static final String COMMAND_OPTION_NAME = "command";
+  public static final String COMPARE_COMMAND_NAME = "compare";
+  public static final String SYNC_COMMAND_NAME = "sync";
+  public static final String EXPORT_COMMAND_NAME = "export";
+
+  //
+  public static final String CLUSTER_OPTION_NAME = "cluster";
+  public static final String CONFIGFILE_OPTION_NAME = "configfile";
+  public static final String SIMULATE_OPTION_NAME = "simulate";
+  public static final String MISMATCHONLY_OPTION_NAME = "mismatchonly";
+  public static final String TOPICPATTERN_OPTION_NAME = "topics";
+  public static final String REPOSITORY_OPTION_NAME = "repository";
+  public static final String PRINTDETAILED_OPTION_NAME = "detailed";
+  public static final String EXPORTFILEPREFIX_OPTION_NAME = "exportfileprefix";
+
+  public static final String OUTPUTFORMAT_OPTION_NAME = "outputformat";
+  public static final String OUTPUTFORMAT_OPTION_DEFAULT = "json";
+
+  public static final String THREADCOUNT_OPTION_NAME = "threadcount";
+  public static final int THREADCOUNT_OPTION_DEFAULT = 5;
 
   private Properties rawProps;
   private Map<String, Properties> clusterProperties;
@@ -62,91 +85,79 @@ public class TopicToolConfig {
     Subparsers subparsers = argumentParser.addSubparsers()
         .help("list topics in a variety of formats.");
 
-    Subparser compareParser = subparsers.addParser("compare").setDefault("command", "compare");
+    Subparser compareParser =
+        subparsers.addParser(COMPARE_COMMAND_NAME).setDefault(COMMAND_OPTION_NAME,
+            COMPARE_COMMAND_NAME);
     compareParser.addArgument("-f", "--config-file")
-        .dest("configfile")
+        .dest(CONFIGFILE_OPTION_NAME)
         .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
         .help("Path and name of file to load Kafka configuration from.");
     compareParser.addArgument("-c", "--cluster")
-        .dest("cluster")
+        .dest(CLUSTER_OPTION_NAME)
         .action(new AppendArgumentAction())
         .help("Cluster from config file that should be queried.");
     compareParser.addArgument("-p", "--topic-pattern")
-        .dest("topics")
+        .dest(TOPICPATTERN_OPTION_NAME)
         .action(new AppendArgumentAction())
         .help("Topics to compare, takes regexes: for example test.* or test.*|xxx.*");
-    compareParser.addArgument("-t", "-threads")
-        .dest("threadcount")
+    compareParser.addArgument("-t", "--threads")
+        .dest(THREADCOUNT_OPTION_NAME)
         .type(Integer.class)
-        .setDefault(5)
+        .setDefault(THREADCOUNT_OPTION_DEFAULT)
         .help("Number of threads to start for comparison operations.");
     compareParser.addArgument("-m", "--mismatch-only")
-        .dest("mismatchonly")
+        .dest(MISMATCHONLY_OPTION_NAME)
         .action(Arguments.storeTrue())
         .help("Print only topics that don't match.");
     compareParser.addArgument("-d", "--detailed")
-        .dest("detailed")
+        .dest(PRINTDETAILED_OPTION_NAME)
         .action(Arguments.storeTrue())
         .help("Print information per partition.");
 
-    Subparser exportParser = subparsers.addParser("export").setDefault("command", "export");
+    Subparser exportParser =
+        subparsers.addParser(EXPORT_COMMAND_NAME).setDefault(COMMAND_OPTION_NAME,
+            EXPORT_COMMAND_NAME);
     exportParser.addArgument("-f", "--config-file")
-        .dest("configfile")
+        .dest(CONFIGFILE_OPTION_NAME)
         .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
         .help("Path and name of file to load Kafka configuration from.");
     exportParser.addArgument("-c", "--cluster")
-        .dest("cluster")
+        .dest(CLUSTER_OPTION_NAME)
         .action(new AppendArgumentAction())
         .help("Cluster from config file that should be queried.");
-    exportParser.addArgument("-b", "--bootstrap-servers")
-        .dest("bootstrapServer")
-        .help(
-            "Allows using the tool without creating a config file, convenience parameter (equivalent to -p \"bootstrap.servers=...\") to specify the bootstrap servers.");
-    exportParser.addArgument("-p", "--parameter")
-        .dest("parameters")
-        .action(new AppendArgumentAction())
-        .help("Extra parameters when not using a config file.");
+    exportParser.addArgument("-p", "--prefix")
+        .dest(EXPORTFILEPREFIX_OPTION_NAME)
+        .setDefault("")
+        .help("Prefix to add to export file - file name will be \"<prefix><clustername>.json\"");
+    exportParser.addArgument("-o", "--output-format")
+        .dest(OUTPUTFORMAT_OPTION_NAME)
+        .setDefault(OUTPUTFORMAT_OPTION_DEFAULT)
+        .help("Output format to use for formatting the export file. Available formatters are: " + TopicTool.getOutputFormatList().toString());
 
-    Subparser syncParser = subparsers.addParser("sync").setDefault("command", "sync");
-    ;
+    Subparser syncParser = subparsers.addParser(SYNC_COMMAND_NAME).setDefault(COMMAND_OPTION_NAME,
+        SYNC_COMMAND_NAME);
     syncParser.addArgument("-f", "--config-file")
-        .dest("configfile")
+        .dest(CONFIGFILE_OPTION_NAME)
         .required(true)
         .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
         .help("Path and name of file to load Kafka and repository configuration from.");
     syncParser.addArgument("-c", "--cluster")
-        .dest("cluster")
+        .dest(CLUSTER_OPTION_NAME)
         .action(new AppendArgumentAction())
         .help(
             "Limit sync to the specified clusters, if not specified all clusters defined in the config file will be targeted.");
+    syncParser.addArgument("-r", "--repository")
+        .dest(REPOSITORY_OPTION_NAME)
+        .required(true)
+        .help("The name of the repository that holds the target state definition to be created on the clusters.");
     syncParser.addArgument("-s", "--simulate")
-        .dest("simulate")
+        .dest(SIMULATE_OPTION_NAME)
         .action(Arguments.storeTrue())
         .help("Don't execute sync actions, print differences only.");
-
-    Subparser setOffsetsParser = subparsers.addParser("set-offsets")
-        .setDefault("command", "setoffsets");
-    ;
-    setOffsetsParser.addArgument("-f", "--config-file")
-        .dest("configfile")
-        .required(true)
-        .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
-        .help("Path and name of file to load Kafka and repository configuration from.");
-    setOffsetsParser.addArgument("-o", "--offsets-file")
-        .dest("offsetsfile")
-        .required(true)
-        .type(Arguments.fileType().acceptSystemIn().verifyCanRead())
-        .help(
-            "A comma separated file to read the offsets from. (Format: topic, partition, consumer-group, offset or date");
-    setOffsetsParser.addArgument("-c", "--cluster")
-        .dest("cluster")
-        .required(true)
+    syncParser.addArgument("-p", "--topic-pattern")
+        .dest(TOPICPATTERN_OPTION_NAME)
         .action(new AppendArgumentAction())
-        .help("Limit operation to the specified clusters.");
-    setOffsetsParser.addArgument("-d", "--use-date")
-        .dest("usedate")
-        .action(Arguments.storeTrue())
-        .help("Use date instead of offset.");
+        .help("Limit topics to sync, takes regexes: for example test.* or test.*|xxx.*");
 
     try {
       parsedCommandLineArgs = argumentParser.parseArgs(commandLineArgs);
@@ -197,6 +208,10 @@ public class TopicToolConfig {
     return;
   }
 
+  public Set<String> getClusterNames() {
+    return this.clusterProperties.keySet();
+  }
+
   public Map<String, Properties> getClusterConfigs() {
     return clusterProperties;
   }
@@ -205,8 +220,16 @@ public class TopicToolConfig {
     return clusterProperties.get(clusterName);
   }
 
-  public Map<String, Properties> getRepoProperties() {
+  public Set<String> getRepoNames() {
+    return repoProperties.keySet();
+  }
+
+  public Map<String, Properties> getRepoConfigs() {
     return repoProperties;
+  }
+
+  public Properties getRepoConfig(String repoName) {
+    return repoProperties.get(repoName);
   }
 
   private Map<String, Properties> getMapWithNameByPrefix(String prefix,

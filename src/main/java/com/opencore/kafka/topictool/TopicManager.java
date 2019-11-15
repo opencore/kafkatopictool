@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.NewPartitions;
@@ -37,6 +38,7 @@ import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
+import org.apache.kafka.common.config.ConfigResource.Type;
 import org.apache.kafka.common.errors.SecurityDisabledException;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.slf4j.Logger;
@@ -56,7 +58,7 @@ public class TopicManager implements AutoCloseable {
   public TopicManager(String clusterName, Properties adminClientProperties) {
     this.clusterName = clusterName;
     this.adminClientProperties = adminClientProperties;
-    adminClient = AdminClient.create(adminClientProperties);
+    adminClient = TopicTool.getAdminClient(adminClientProperties);
 
     this.replicationManager = new ReplicationFactorManager(adminClientProperties);
     ServiceLoader<OutputFormatService> loader = ServiceLoader.load(OutputFormatService.class);
@@ -82,8 +84,6 @@ public class TopicManager implements AutoCloseable {
       e.printStackTrace();
     }
     return topicPartitions.get(topic);
-
-
   }
 
   public List<NewTopic> getTopics() {
@@ -187,6 +187,7 @@ public class TopicManager implements AutoCloseable {
     return newTopicList;
   }
 
+  /*
   public String getTopicsFormatted(String format) {
     return getFormatter(format).format(getTopics());
   }
@@ -206,7 +207,7 @@ public class TopicManager implements AutoCloseable {
   private OutputFormatService getFormatter(String format) {
     return availableFormatters.get(format);
   }
-
+  */
   public Set<String> getAvailableOutputFormats() {
     return availableFormatters.keySet();
   }
@@ -265,9 +266,38 @@ public class TopicManager implements AutoCloseable {
     System.out.println("Modifying: ");
     // Identify changes that are necessary changes for all topics to be modified
     Map<String, NewPartitions> operations = new HashMap<>();
+    Map<ConfigResource, Config> configChangeOperations = new HashMap<>();
+
     for (String topicToModify : topicsToModify) {
       NewTopic currentState = currentTopicMap.get(topicToModify);
       NewTopic targetState = targetTopicMap.get(topicToModify);
+
+      // Check if configuration differs
+      Map<String, String> currentConfigs = currentState.configs();
+      Map<String, String> targetConfigs = targetState.configs();
+
+      if (!compareTopicConfig(currentConfigs, targetConfigs)) {
+        // Configs are different, create changeset
+        List<String> nonMatchingSettings = targetConfigs.keySet().stream()
+            .filter(setting -> !targetConfigs.get(setting).equals(currentConfigs.get(setting)))
+            .collect(Collectors.toList());
+        for (String setting : nonMatchingSettings) {
+          System.out.println("Changing topic setting " + setting + " from " + currentConfigs.get(setting) + " to " + targetConfigs.get(setting));
+        }
+
+        List<String> removedSettings =
+            currentConfigs.keySet().stream().filter(setting -> !targetConfigs.containsKey(setting))
+                .collect(Collectors.toList());
+        for (String setting : removedSettings) {
+          System.out.println("Removing topic setting " + setting + " from target topic.");
+        }
+      }
+
+      ConfigResource topic = new ConfigResource(Type.TOPIC, topicToModify);
+      List<ConfigEntry> targetConfiguration = targetConfigs.keySet().stream()
+          .map(setting -> new ConfigEntry(setting, targetConfigs.get(setting))).collect(
+              Collectors.toList());
+      configChangeOperations.put(topic, new Config(targetConfiguration));
 
       // Check if partition count is different
       if (currentState.numPartitions() > targetState.numPartitions()) {
@@ -302,12 +332,13 @@ public class TopicManager implements AutoCloseable {
     }
 
     // Execute operations
-    if (false) {
+    if (!simulate) {
       System.out.println("Executing actions!");
       try {
         adminClient.createTopics(topicsToCreate);
         adminClient.deleteTopics(topicsToDelete);
         adminClient.createPartitions(operations).all().get();
+        adminClient.alterConfigs(configChangeOperations);
         replicationManager.executeOperations();
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
@@ -334,13 +365,23 @@ public class TopicManager implements AutoCloseable {
         System.out.println("ExecutionException: " + ex.getMessage());
       }
     }
-
   }
 
   private boolean compareTopics(NewTopic a, NewTopic b) {
-    // TODO: hack and incomplete
     return a.name().equals(b.name()) && a.numPartitions() == b.numPartitions()
-        && a.replicationFactor() == b.replicationFactor();
+        && a.replicationFactor() == b.replicationFactor() && compareTopicConfig(a.configs(),
+        b.configs());
+  }
+
+  private boolean compareTopicConfig(Map<String, String> sourceConfig,
+      Map<String, String> targetConfig) {
+    if (sourceConfig.keySet().equals(targetConfig.keySet())) {
+      List<String> nonMatchingSettings = targetConfig.keySet().stream()
+          .filter(setting -> !targetConfig.get(setting).equals(sourceConfig.get(setting)))
+          .collect(Collectors.toList());
+      return nonMatchingSettings.isEmpty();
+    }
+    return false;
   }
 
 

@@ -16,8 +16,13 @@ package com.opencore.kafka.topictool.repository.provider;
 
 import com.opencore.kafka.topictool.repository.TopicDefinition;
 import java.util.Map;
+import java.util.Properties;
 
 public interface RepositoryProviderService {
 
+  String repositoryProviderType();
+
   Map<String, TopicDefinition> getTopics(String cluster);
+
+  void configure(Properties config);
 }

@@ -20,12 +20,14 @@ import com.opencore.kafka.ScalaInterface;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import kafka.zk.AdminZkClient;
 import kafka.zk.KafkaZkClient;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
@@ -45,7 +47,7 @@ public class ReplicationFactorManager {
     this.gson = new GsonBuilder().create();
     this.adminClientProperties = adminClientProperties;
 
-    adminClient = AdminClient.create(adminClientProperties);
+    adminClient = TopicTool.getAdminClient(adminClientProperties);
 
     // Retrieve list of live brokers
     try {
@@ -122,7 +124,7 @@ public class ReplicationFactorManager {
     if (plannedOperations == null) {
       return;
     }
-    ScalaInterface scalaInterface = new ScalaInterface(AdminClient.create(adminClientProperties),
+    ScalaInterface scalaInterface = new ScalaInterface(TopicTool.getAdminClient(adminClientProperties),
         adminClientProperties.getProperty("zookeeper.connect"));
     scalaInterface.execute(gson.toJson(plannedOperations));
     plannedOperations = null;

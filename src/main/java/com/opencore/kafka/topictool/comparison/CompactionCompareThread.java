@@ -76,16 +76,16 @@ public class CompactionCompareThread extends CompareThread
           .toString());
       logger.trace("Keyset for cluster2: " + keyRecordMap2.keySet()
           .toString());
-      result.setResult(false);
+      result.setResult(PartitionCompareResult.MISMATCH);
     } else {
       logger.debug("Number of keys match, comparing values for " + topicPartition);
       for (String key : keyRecordMap1.keySet()) {
         if (!nullSafeEquals(keyRecordMap1.get(key), keyRecordMap2.get(key))) {
-          result.setResult(false);
+          result.setResult(PartitionCompareResult.MISMATCH);
           break;
         }
       }
-      result.setResult(true);
+      result.setResult(PartitionCompareResult.MATCH);
     }
     return result;
   }

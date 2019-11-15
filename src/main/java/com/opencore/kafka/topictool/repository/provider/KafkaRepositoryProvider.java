@@ -16,7 +16,6 @@ package com.opencore.kafka.topictool.repository.provider;
 
 import com.opencore.kafka.topictool.TopicManager;
 import com.opencore.kafka.topictool.repository.TopicDefinition;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,15 +31,27 @@ public class KafkaRepositoryProvider implements RepositoryProviderService {
 
 
   public KafkaRepositoryProvider(Properties repoProperties) {
-    this.repoProperties = repoProperties;
-    this.topicManager = new TopicManager("kafkarepo", repoProperties);
-    this.filterRegex = repoProperties.getProperty("topicfilter");
-    String clustersString = repoProperties.getProperty("copytocluster");
-    this.targetClusters = Arrays.asList(clustersString.split(","));
+   configure(repoProperties);
   }
 
   @Override
-  public Map<String, TopicDefinition> getTopics(String cluster) {
+  public void configure(Properties repoProperties) {
+    this.repoProperties = repoProperties;
+    this.topicManager = new TopicManager("kafkarepo", repoProperties);
+    this.filterRegex = repoProperties.getProperty("topicfilter");
+  }
+
+  @Override
+  public String repositoryProviderType() {
+    return "kafka";
+  }
+
+  public KafkaRepositoryProvider() {
+    super();
+  }
+
+  @Override
+  public Map<String, TopicDefinition> getTopics(String topicFilter) {
     List<NewTopic> topics;
     if (filterRegex != null) {
       topics = topicManager.getTopics(filterRegex, true);
