@@ -124,6 +124,10 @@ public class ReplicationFactorManager {
     if (plannedOperations == null) {
       return;
     }
+    if (!adminClientProperties.containsKey("zookeeper.connect")) {
+      System.out.println("Changing the replication factor requires configuring a Zookeeper connection, skipping this action.");
+      return;
+    }
     ScalaInterface scalaInterface = new ScalaInterface(TopicTool.getAdminClient(adminClientProperties),
         adminClientProperties.getProperty("zookeeper.connect"));
     scalaInterface.execute(gson.toJson(plannedOperations));
