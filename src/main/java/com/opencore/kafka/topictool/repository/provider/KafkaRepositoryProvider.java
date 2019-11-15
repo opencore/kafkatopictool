@@ -54,8 +54,8 @@ public class KafkaRepositoryProvider implements RepositoryProviderService {
   @Override
   public Map<String, TopicDefinition> getTopics(String topicFilter) {
     List<NewTopic> topics;
-    if (filterRegex != null) {
-      topics = topicManager.getTopics(filterRegex, true);
+    if (topicFilter != null) {
+      topics = topicManager.getTopics(topicFilter, true);
     } else {
       topics = topicManager.getTopics(true);
     }

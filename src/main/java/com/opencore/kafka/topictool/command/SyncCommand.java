@@ -16,6 +16,7 @@
 package com.opencore.kafka.topictool.command;
 
 public class SyncCommand extends TopicToolCommand {
+  private String topicPattern;
 
   public SyncCommand() {
     super();
@@ -26,6 +27,19 @@ public class SyncCommand extends TopicToolCommand {
     this.setSourceRepository(sourceRepository);
     this.setTargetCluster(targetCluster);
     this.setSimulate(simulate);
+  }
+
+  public String getTopicPattern() {
+    return topicPattern;
+  }
+
+  public void setTopicPattern(String topicPattern) {
+    this.topicPattern = topicPattern;
+  }
+
+  public SyncCommand(String sourceRepository, String targetCluster, boolean simulate, String topicPattern) {
+    this(sourceRepository, targetCluster, simulate);
+    this.topicPattern = topicPattern;
   }
 
   @Override

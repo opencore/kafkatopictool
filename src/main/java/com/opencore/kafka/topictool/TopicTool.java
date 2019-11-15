@@ -185,10 +185,13 @@ public class TopicTool {
     TopicManager topicManager = topicManagerMap.get(clusterName);
 
     // Retrieve the defined topics from the repository
-    Map<String, TopicDefinition> topicList = repositoryProvider.getTopics(clusterName);
+    Map<String, TopicDefinition> topicList = repositoryProvider.getTopics(command.getTopicPattern());
+
 
     // Convert to list in the format that TopicManager expects
-    List<NewTopic> tl = topicList.values().stream().map(e -> e.getNewTopic())
+    List<NewTopic> tl = topicList.values()
+        .stream()
+        .map(e -> e.getNewTopic())
         .collect(Collectors.toList());
 
     // Execute sync command

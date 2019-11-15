@@ -162,7 +162,6 @@ public class TopicToolConfig {
         .help("Don't execute sync actions, print differences only.");
     syncParser.addArgument("-p", "--topic-pattern")
         .dest(TOPICPATTERN_OPTION_NAME)
-        .action(new AppendArgumentAction())
         .help("Limit topics to sync, takes regexes: for example test.* or test.*|xxx.*");
 
     try {
