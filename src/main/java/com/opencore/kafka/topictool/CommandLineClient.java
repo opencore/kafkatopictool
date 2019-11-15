@@ -25,7 +25,7 @@ public class CommandLineClient {
       simulate = false;
     }
     if (config.getConfig().getString(TopicToolConfig.COMMAND_OPTION_NAME)
-        == TopicToolConfig.EXPORT_COMMAND_NAME) {
+        .equals(TopicToolConfig.EXPORT_COMMAND_NAME)) {
       // Get the list of clusters specified on the command line and create an
       // export command per cluster
 
@@ -47,7 +47,7 @@ public class CommandLineClient {
                 outputFormat));
       }
     } else if (config.getConfig().getString(TopicToolConfig.COMMAND_OPTION_NAME)
-        == TopicToolConfig.SYNC_COMMAND_NAME) {
+        .equals(TopicToolConfig.SYNC_COMMAND_NAME)) {
       List<String> inScopeClusters =
           getAndCheckClusterList(config); // This exits if no clusters are passed
 
@@ -69,7 +69,7 @@ public class CommandLineClient {
         commands.add(new SyncCommand(sourceRepository, currentCluster, simulate));
       }
     } else if (config.getConfig().getString(TopicToolConfig.COMMAND_OPTION_NAME)
-        == TopicToolConfig.COMPARE_COMMAND_NAME) {
+        .equals(TopicToolConfig.COMPARE_COMMAND_NAME)) {
       List<String> inScopeClusters = getAndCheckClusterList(config);
 
       // We need nothing more, now we can generate a compare command for every

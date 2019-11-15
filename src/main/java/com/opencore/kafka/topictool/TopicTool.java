@@ -154,7 +154,7 @@ public class TopicTool {
               "Partition " + partitionResult.getPartition() + ": " + partitionResult.toString());
         }
       }
-      if (!printMismatchOnly || (!match && printMismatchOnly)) {
+      if (!printMismatchOnly || !match) {
         System.out.println(topic + ": " + (match ? "MATCH" : "MISMATCH"));
       }
 
