@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2019 Sönke Liebau (soenke.liebau@opencore.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.opencore.kafka.topictool;
 
 import com.google.common.collect.Sets;
@@ -25,7 +40,7 @@ public class CommandLineClient {
       simulate = false;
     }
     if (config.getConfig().getString(TopicToolConfig.COMMAND_OPTION_NAME)
-        == TopicToolConfig.EXPORT_COMMAND_NAME) {
+        .equals(TopicToolConfig.EXPORT_COMMAND_NAME)) {
       // Get the list of clusters specified on the command line and create an
       // export command per cluster
 
@@ -47,7 +62,7 @@ public class CommandLineClient {
                 outputFormat));
       }
     } else if (config.getConfig().getString(TopicToolConfig.COMMAND_OPTION_NAME)
-        == TopicToolConfig.SYNC_COMMAND_NAME) {
+        .equals(TopicToolConfig.SYNC_COMMAND_NAME)) {
       List<String> inScopeClusters =
           getAndCheckClusterList(config); // This exits if no clusters are passed
 
@@ -69,7 +84,7 @@ public class CommandLineClient {
         commands.add(new SyncCommand(sourceRepository, currentCluster, simulate));
       }
     } else if (config.getConfig().getString(TopicToolConfig.COMMAND_OPTION_NAME)
-        == TopicToolConfig.COMPARE_COMMAND_NAME) {
+        .equals(TopicToolConfig.COMPARE_COMMAND_NAME)) {
       List<String> inScopeClusters = getAndCheckClusterList(config);
 
       // We need nothing more, now we can generate a compare command for every
