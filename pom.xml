@@ -23,7 +23,7 @@
 
   <groupId>com.opencore.kafka</groupId>
   <artifactId>TopicTool</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 
   <name>TopicTool</name>
   <url>http://www.github.com/opencore/topictool</url>
