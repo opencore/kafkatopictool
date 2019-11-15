@@ -58,15 +58,21 @@ public class TopicTool {
   private HashMap<String, RepositoryProviderService> repositoryMap = null;
 
   public static Properties cleanupAdminClientProperties(Properties adminClientProperties) {
-    List<String> unsupportedSettings = adminClientProperties.keySet().stream()
+    // Create a new copy of the Properties object
+    // which only contains the allowed config
+    // values for an AdminClient
+    Properties result = new Properties();
+    List<String> validSettings = adminClientProperties.keySet()
+        .stream()
+        .filter(e -> e instanceof String)
         .map(e -> (String) e)
-        .filter(e -> !AdminClientConfig.configNames().contains(e))
+        .filter(e -> AdminClientConfig.configNames().contains(e))
         .collect(Collectors.toList());
 
-    for (String setting : unsupportedSettings) {
-      adminClientProperties.remove(setting);
+    for (String setting : validSettings) {
+      result.setProperty(setting, adminClientProperties.getProperty(setting));
     }
-    return adminClientProperties;
+    return result;
   }
 
   public static AdminClient getAdminClient(Properties adminClientProperties) {
@@ -177,8 +183,11 @@ public class TopicTool {
   private TopicToolCommandResult executeSync(SyncCommand command) {
     // Initialize repository provider
     String repositoryName = command.getSourceRepository();
+    Properties repositoryConfig = config.getRepoConfig(repositoryName);
+    String repositoryType = repositoryConfig.getProperty("provider");
+
     RepositoryProviderService repositoryProvider =
-        loadRepoProvider(repositoryName, config.getRepoConfig(repositoryName));
+        loadRepoProvider(repositoryType, config.getRepoConfig(repositoryName));
 
     // Initialize cluster topic manager
     String clusterName = command.getTargetCluster();
