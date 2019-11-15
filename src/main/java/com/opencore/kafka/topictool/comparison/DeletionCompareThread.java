@@ -43,11 +43,13 @@ public class DeletionCompareThread extends CompareThread implements
   @Override
   public PartitionCompareResult call() throws Exception {
     initialize();
-    List<ConsumerRecord<String, String>> topicRecords1 = new LinkedList<>();
-    List<ConsumerRecord<String, String>> topicRecords2 = new LinkedList<>();
 
+    // Poll once from both clusters to get some initial records
+    List<ConsumerRecord<String, String>> topicRecords1 = new LinkedList<>();
     logger.debug("Polling cluster1 " + topicPartition);
     topicRecords1.addAll(poll(consumer1));
+
+    List<ConsumerRecord<String, String>> topicRecords2 = new LinkedList<>();
     logger.debug("Polling cluster2 " + topicPartition);
     topicRecords2.addAll(poll(consumer2));
 
@@ -61,9 +63,6 @@ public class DeletionCompareThread extends CompareThread implements
     //   both topics or both topics have been read beyond the
     //   largest offset we initially measured
 
-    /*while ((lastPolledOffset1 < compareUntilOffset1 || lastPolledOffset2 < compareUntilOffset2)
-        && !(topicRecords1.isEmpty() && topicRecords2.isEmpty())
-        && emptyPolls < 5) { */
     while (lastPolledOffset1 < compareUntilOffset1 && lastPolledOffset2 < compareUntilOffset2
         && emptyPolls < 5) {
       while (!(topicRecords1.isEmpty() || topicRecords2.isEmpty())) {
