@@ -306,7 +306,7 @@ public class TopicManager implements AutoCloseable {
       } else if (currentState.numPartitions() < targetState.numPartitions()) {
         //System.out.println("Queuing operation to add " + (targetState.numPartitions() - currentState.numPartitions()) + " partitions for topic " + topicToModify);
         System.out.println(
-            topicToModify + ": increasing partition count from " + currentState.numPartitions()
+            "Topic " + topicToModify + ": increasing partition count from " + currentState.numPartitions()
                 + " to " + targetState.numPartitions());
         operations.put(topicToModify, NewPartitions.increaseTo(targetState.numPartitions()));
       }
