@@ -19,7 +19,6 @@ import com.google.gson.GsonBuilder;
 import com.opencore.kafka.topictool.repository.TopicDefinition;
 import java.io.Writer;
 import java.util.List;
-import org.apache.kafka.clients.admin.NewTopic;
 
 public class JsonOutputFormat implements OutputFormatService {
 
