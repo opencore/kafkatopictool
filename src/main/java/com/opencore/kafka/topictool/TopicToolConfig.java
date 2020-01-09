@@ -65,6 +65,9 @@ public class TopicToolConfig {
   public static final String THREADCOUNT_OPTION_NAME = "threadcount";
   public static final int THREADCOUNT_OPTION_DEFAULT = 5;
 
+  public static final String DELETE_OPTION_NAME = "deletetopics";
+
+
   private Properties rawProps;
   private Map<String, Properties> clusterProperties;
   private Map<String, Properties> repoProperties;
@@ -163,7 +166,11 @@ public class TopicToolConfig {
     syncParser.addArgument("-p", "--topic-pattern")
         .dest(TOPICPATTERN_OPTION_NAME)
         .help("Limit topics to sync, takes regexes: for example test.* or test.*|xxx.*");
-
+    syncParser.addArgument("-d", "--delete-topics")
+        .dest(DELETE_OPTION_NAME)
+        .action(Arguments.storeTrue())
+        .help("By default this tool will not delete topics on the target cluster, use this option"
+            + "to enable deletion of topics that were removed on the source cluster.");
     try {
       parsedCommandLineArgs = argumentParser.parseArgs(commandLineArgs);
     } catch (ArgumentParserException e) {

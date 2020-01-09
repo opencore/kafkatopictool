@@ -47,6 +47,7 @@ public class TopicManager implements AutoCloseable {
   private AdminClient adminClient;
   private ReplicationFactorManager replicationManager;
   private String ignoreTopics;
+  private boolean deleteTopics = false;
 
   private Map<String, OutputFormatService> availableFormatters;
 
@@ -208,7 +209,7 @@ public class TopicManager implements AutoCloseable {
     return availableFormatters.keySet();
   }
 
-  public void sync(List<NewTopic> targetTopicList, boolean simulate) {
+  public void sync(List<NewTopic> targetTopicList, boolean simulate, boolean deleteTopics) {
     Map<String, NewTopic> targetTopicMap = targetTopicList
         .stream()
         .map(e -> (NewTopic) e)
@@ -334,7 +335,11 @@ public class TopicManager implements AutoCloseable {
       System.out.println("Executing actions!");
       try {
         adminClient.createTopics(topicsToCreate);
-        adminClient.deleteTopics(topicsToDelete);
+        if (deleteTopics) {
+          adminClient.deleteTopics(topicsToDelete);
+        } else {
+          System.out.println("Skipping deletion of topics as -d parameter wasn't specified!");
+        }
         adminClient.createPartitions(operations).all().get();
         adminClient.alterConfigs(configChangeOperations);
         replicationManager.executeOperations();

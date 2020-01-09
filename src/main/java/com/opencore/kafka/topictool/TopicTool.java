@@ -204,7 +204,7 @@ public class TopicTool {
         .collect(Collectors.toList());
 
     // Execute sync command
-    topicManager.sync(tl, command.getSimulate());
+    topicManager.sync(tl, command.getSimulate(), config.getConfig().getBoolean(TopicToolConfig.DELETE_OPTION_NAME));
 
     return new TopicToolCommandResult();
   }
