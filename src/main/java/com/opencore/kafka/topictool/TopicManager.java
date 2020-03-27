@@ -331,24 +331,31 @@ public class TopicManager implements AutoCloseable {
     }
 
     // Execute operations
+    int failedOperations = 0;
     if (!simulate) {
       System.out.println("Executing actions!");
       try {
-        adminClient.createTopics(topicsToCreate);
+        adminClient.createTopics(topicsToCreate).all().get();
         if (deleteTopics) {
-          adminClient.deleteTopics(topicsToDelete);
+          adminClient.deleteTopics(topicsToDelete).all().get();
         } else {
           System.out.println("Skipping deletion of topics as -d parameter wasn't specified!");
         }
         adminClient.createPartitions(operations).all().get();
-        adminClient.alterConfigs(configChangeOperations);
+        adminClient.alterConfigs(configChangeOperations).all().get();
         replicationManager.executeOperations();
       } catch (InterruptedException | ExecutionException e) {
-        System.out
+        failedOperations++;
+        System.err
             .println("Exceptions ocurred during execution of an operation: " + e.getMessage());
       }
     } else {
       System.out.println("Running in simulation mode, bypassing execute step!");
+    }
+    if (failedOperations > 0) {
+      System.err.println("There were " + failedOperations + " failed operations when executing the necessary changes on the target cluster.");
+
+      System.exit(1);
     }
   }
 
