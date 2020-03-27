@@ -196,15 +196,8 @@ public class TopicTool {
     // Retrieve the defined topics from the repository
     Map<String, TopicDefinition> topicList = repositoryProvider.getTopics(command.getTopicPattern());
 
-
-    // Convert to list in the format that TopicManager expects
-    List<NewTopic> tl = topicList.values()
-        .stream()
-        .map(e -> e.getNewTopic())
-        .collect(Collectors.toList());
-
     // Execute sync command
-    topicManager.sync(tl, command.getSimulate(), config.getConfig().getBoolean(TopicToolConfig.DELETE_OPTION_NAME));
+    topicManager.sync(topicList, command.getSimulate(), config.getConfig().getBoolean(TopicToolConfig.DELETE_OPTION_NAME));
 
     return new TopicToolCommandResult();
   }

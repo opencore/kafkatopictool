@@ -16,6 +16,7 @@
 package com.opencore.kafka.topictool;
 
 import com.opencore.kafka.topictool.output.OutputFormatService;
+import com.opencore.kafka.topictool.repository.TopicDefinition;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -207,6 +208,16 @@ public class TopicManager implements AutoCloseable {
   */
   public Set<String> getAvailableOutputFormats() {
     return availableFormatters.keySet();
+  }
+
+  public void sync(Map<String, TopicDefinition> topicList, boolean simulate, boolean deleteTopics) {
+    // Convert to list in the format that TopicManager expects
+    List<NewTopic> tl = topicList.values()
+        .stream()
+        .map(e -> e.getNewTopic())
+        .collect(Collectors.toList());
+
+    sync(tl, simulate, deleteTopics);
   }
 
   public void sync(List<NewTopic> targetTopicList, boolean simulate, boolean deleteTopics) {
