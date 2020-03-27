@@ -1,0 +1,27 @@
+[
+  {
+    "name": "test1",
+    "numPartitions": 1,
+    "replicationFactor": 1
+  },
+  {
+    "name": "test2",
+    "numPartitions": 9,
+    "replicationFactor": 3
+  },
+  {
+    "name": "test3",
+    "numPartitions": 100,
+    "replicationFactor": 2
+  },
+  {
+    "name": "test4",
+    "numPartitions": 15,
+    "replicationFactor": 1
+  },
+  {
+    "name": "test5",
+    "numPartitions": 20,
+    "replicationFactor": 3
+  }
+]

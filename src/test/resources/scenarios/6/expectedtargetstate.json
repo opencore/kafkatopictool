@@ -1,0 +1,12 @@
+[
+  {
+    "name": "test1",
+    "numPartitions": 9,
+    "replicationFactor": 3
+  },
+  {
+    "name": "test2",
+    "numPartitions": 1,
+    "replicationFactor": 3
+  }
+]
